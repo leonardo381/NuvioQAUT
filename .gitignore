@@ -69,6 +69,13 @@ dlldata.c
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
 
+# Playwright artifacts (your framework)
+artifacts/
+**/artifacts/
+playwright-report/
+**/playwright-report/
+**/*.zip
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
