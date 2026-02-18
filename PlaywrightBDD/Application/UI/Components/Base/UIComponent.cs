@@ -1,5 +1,6 @@
 using Framework.Core;
 using Microsoft.Playwright;
+using System;
 using System.Threading.Tasks;
 
 namespace Application.UI.Components.Base
@@ -9,13 +10,21 @@ namespace Application.UI.Components.Base
         protected ILocator Root { get; }
         protected ElementExecutor Exec { get; }
 
-        protected UIComponent(IPage page, ILocator root)
+        protected UIComponent(ILocator root, ElementExecutor executor)
         {
-            Root = root;
-            Exec = new ElementExecutor(page);
+            Root = root ?? throw new ArgumentNullException(nameof(root));
+            Exec = executor ?? throw new ArgumentNullException(nameof(executor));
         }
 
-        // Small helpers (optional but useful)
+        protected ILocator Locator(string selector) => Root.Locator(selector);
+
+        // ✅ Correct option types for locator-rooted queries
+        protected ILocator GetByRole(AriaRole role, LocatorGetByRoleOptions? options = null)
+            => Root.GetByRole(role, options);
+
+        protected ILocator GetByText(string text, LocatorGetByTextOptions? options = null)
+            => Root.GetByText(text, options);
+
         public Task WaitForVisibleAsync()
             => Root.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
 

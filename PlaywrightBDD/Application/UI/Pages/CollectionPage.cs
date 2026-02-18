@@ -1,5 +1,7 @@
 using Application.UI.Components;
+using Framework.Core;
 using Microsoft.Playwright;
+using System;
 
 namespace Application.UI.Pages
 {
@@ -7,10 +9,8 @@ namespace Application.UI.Pages
     /// Generic PocketBase collection page.
     /// Pure mapping + wiring of component roots.
     /// </summary>
-    public sealed class CollectionPage
+    public sealed class CollectionPage : BasePage
     {
-        public IPage Page { get; }
-
         // Shared layout
         public AppShell Shell { get; }
 
@@ -18,19 +18,20 @@ namespace Application.UI.Pages
         public GridComponent Grid { get; }
         public ModalComponent Modal { get; }
 
-        public CollectionPage(IPage page)
+        public CollectionPage(IPage page, ElementExecutor executor) : base(page, executor)
         {
-            Page = page;
-
             // App layout (sidebar/toolbar/toasts)
-            Shell = new AppShell(page);
+            Shell = new AppShell(page, executor);
 
-            // Page-specific roots (adjust selectors as needed for PocketBase)
-            var gridRoot  = page.Locator(".table-wrapper, .pb-table, table").First;
+            // Page-specific locators
+            var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
             var modalRoot = page.Locator(".modal, [role='dialog']").First;
 
-            Grid = new GridComponent(page, gridRoot);
-            Modal = new ModalComponent(page, modalRoot);
+            if (gridRoot is null) throw new InvalidOperationException("Grid root locator resolved to null.");
+            if (modalRoot is null) throw new InvalidOperationException("Modal root locator resolved to null.");
+
+            Grid = new GridComponent(gridRoot, executor);
+            Modal = new ModalComponent(modalRoot, executor);
         }
     }
 }

@@ -1,45 +1,19 @@
-using Application.UI.Components.Base;
-using Microsoft.Playwright;
 using System.Threading.Tasks;
+using Application.UI.Components.Base;
+using Framework.Core;
+using Microsoft.Playwright;
 
 namespace Application.UI.Components
 {
-    /// <summary>
-    /// Sidebar navigation. Provides generic "open by name"
-    /// so you don't create one context per collection.
-    /// </summary>
-    public sealed class SidebarMenu : UIComponent
+    public class SidebarMenu : UIComponent
     {
-        public SidebarMenu(IPage page, ILocator root) : base(page, root) { }
+        public SidebarMenu(ILocator root, ElementExecutor executor) : base(root, executor) { }
 
-        // Optional: expand a "Collections" section if it exists
-        private ILocator CollectionsSection =>
-            Root.Locator("a:has-text('Collections'), button:has-text('Collections')").First;
+        private ILocator UsersLink => Root.GetByRole(AriaRole.Link, new() { Name = "Users" });
 
-        public async Task OpenCollectionsSectionAsync()
+        public async Task OpenUsersAsync()
         {
-            if (await CollectionsSection.CountAsync() > 0)
-                await Exec.ClickAsync(CollectionsSection);
+            await Exec.ClickAsync(UsersLink);
         }
-
-        /// <summary>
-        /// Generic: open any collection by visible name in the sidebar.
-        /// </summary>
-        public async Task OpenCollectionAsync(string collectionName)
-        {
-            // Some UIs require expanding a section first
-            await OpenCollectionsSectionAsync();
-
-            var link = Root.Locator($"a:has-text('{collectionName}')").First;
-
-            // If not found, do nothing for now (or throw later).
-            if (await link.CountAsync() == 0)
-                return;
-
-            await Exec.ClickAsync(link);
-        }
-
-        // Convenience wrappers if you still want them
-        public Task OpenUsersAsync() => OpenCollectionAsync("Users");
     }
 }

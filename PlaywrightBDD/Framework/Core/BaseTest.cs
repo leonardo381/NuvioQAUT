@@ -3,22 +3,25 @@ using Microsoft.Playwright;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Framework.Core
 {
     public abstract class BaseTest : TestLifecycleManager
     {
-        protected IPage Page => ContextManager.Page;
+        protected IPage Page => Ctx.Page;
 
-        // Pages still have their own Executor
+        //Create a single executor instance per test, with explicit dependencies
         private ElementExecutor? _executor;
-        protected ElementExecutor Executor => _executor ??= new ElementExecutor(Page);
+        protected ElementExecutor Executor => _executor ??= new ElementExecutor(
+            waiter: new Waiter(),
+            retry: new RetryHandler()
+        );
 
         [TearDown]
         public async Task CaptureScreenshotOnFailure()
         {
-            // Only if this test actually used UI
             var cats = TestContext.CurrentContext.Test.Properties["Category"]
                 .Cast<string>()
                 .Select(c => c.ToLowerInvariant())
@@ -33,26 +36,15 @@ namespace Framework.Core
             if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed)
                 return;
 
-            var testName = MakeSafeFileName(TestContext.CurrentContext.Test.Name);
+            var dir = Path.Combine(Settings.ArtifactDir, "screenshots");
+            Directory.CreateDirectory(dir);
 
-            var screenshotDir = Path.Combine(Settings.ArtifactDir, "screenshots");
-            Directory.CreateDirectory(screenshotDir);
-
-            var screenshotPath = Path.Combine(screenshotDir, $"{testName}.png");
-
+            var path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
             await Page.ScreenshotAsync(new PageScreenshotOptions
             {
-                Path = screenshotPath,
+                Path = path,
                 FullPage = true
             });
-        }
-
-        private static string MakeSafeFileName(string name)
-        {
-            foreach (var c in Path.GetInvalidFileNameChars())
-                name = name.Replace(c, '_');
-
-            return name;
         }
     }
 }

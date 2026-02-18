@@ -1,20 +1,24 @@
-using Application.UI.Components.Base;
-using Microsoft.Playwright;
 using System.Threading.Tasks;
+using Application.UI.Components.Base;
+using Framework.Core;
+using Microsoft.Playwright;
 
 namespace Application.UI.Components
 {
-    public sealed class ModalComponent : UIComponent
+    public class ModalComponent : UIComponent
     {
-        public ModalComponent(IPage page, ILocator root) : base(page, root) { }
+        public ModalComponent(ILocator root, ElementExecutor executor) : base(root, executor) { }
 
-        private ILocator SaveButton =>
-            Root.Locator("button:has-text('Save'), button[type='submit']:has-text('Save')").First;
+        public async Task FillFieldAsync(string label, string value)
+        {
+            var input = Root.GetByLabel(label);
+            await Exec.FillAsync(input, value);
+        }
 
-        public Task FillFieldAsync(string name, string value)
-            => Exec.FillAsync(Root.Locator($"[name='{name}']").First, value);
-
-        public Task SaveAsync()
-            => Exec.ClickAsync(SaveButton);
+        public async Task ConfirmAsync()
+        {
+            var btn = Root.GetByRole(AriaRole.Button, new() { Name = "Save" });
+            await Exec.ClickAsync(btn);
+        }
     }
 }

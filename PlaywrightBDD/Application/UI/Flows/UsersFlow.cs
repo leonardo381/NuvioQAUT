@@ -1,29 +1,23 @@
-using Application.UI.Pages;
-using Microsoft.Playwright;
 using System.Threading.Tasks;
+using Application.UI.Pages;
+using Framework.Core;
+using Microsoft.Playwright;
 
 namespace Application.UI.Flows
 {
     public class UsersFlow
     {
-        private readonly IPage _page;
+        private readonly UsersPage _users;
 
-        public UsersFlow(IPage page)
+        public UsersFlow(IPage page, ElementExecutor exec)
         {
-            _page = page;
-        }
-
-        public async Task OpenUsersAsync()
-        {
-            var users = new UsersPage(_page);
-            await users.Menu.OpenUsersAsync();
+            _users = new UsersPage(page, exec);
         }
 
         public async Task CreateUserAsync(string email, string password)
         {
-            var users = new UsersPage(_page);
-            await users.Menu.OpenUsersAsync();
-            await users.CreateUserAsync(email, password);
+            await _users.OpenAsync();
+            await _users.CreateUserAsync(email, password);
         }
     }
 }

@@ -1,56 +1,39 @@
-using Framework.Core;
-using Microsoft.Playwright;
 using System.Threading.Tasks;
 using Application.UI.Components;
+using Framework.Core;
+using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
     public class UsersPage : BasePage
     {
-        public SidebarMenu Menu { get; }
-        public Toolbar Toolbar { get; }
-        public GridComponent Grid { get; }
+        public AppShell Shell { get; }
+        public GridComponent UsersGrid { get; }
+        public ModalComponent Modal { get; }
 
-        // These selectors may differ depending on PocketBase version/theme.
-        private ILocator GridRoot => Page.Locator("table, .data-table, .list-table").First;
-
-        private ILocator CreateButton => Page.Locator("button:has-text('New'), button:has-text('Create'), a:has-text('New')");
-        private ILocator EmailInput => Page.Locator("input[name='email'], input[type='email']");
-        private ILocator PasswordInput => Page.Locator("input[name='password']").First;
-        private ILocator PasswordConfirmInput => Page.Locator("input[name='passwordConfirm'], input[name='password_confirmation']").First;
-        private ILocator SaveButton => Page.Locator("button:has-text('Save'), button[type='submit']:has-text('Save')");
-
-        public UsersPage(IPage page) : base(page)
+        //optional shell injection
+        public UsersPage(IPage page, ElementExecutor executor, AppShell? shell = null) : base(page, executor)
         {
-            Menu = new SidebarMenu(page);
-            Toolbar = new Toolbar(page);
-            Grid = new GridComponent(page, GridRoot);
+            Shell = shell ?? new AppShell(page, executor);
+
+            //selectors
+            UsersGrid = new GridComponent(page.Locator(".collection-view"), executor);
+            Modal = new ModalComponent(page.Locator(".modal"), executor);
         }
 
         public async Task OpenAsync()
         {
-            // PocketBase admin “collections” routing varies; you can open Users via menu instead.
-            await Page.GotoAsync("/_/");
-            // Prefer: await Menu.OpenUsersAsync(); (implemented in SidebarMenu)
-        }
-
-        public async Task ClickCreateAsync()
-        {
-            await Executor.ClickAsync(CreateButton);
+            await Shell.Menu.OpenUsersAsync();
+            await UsersGrid.WaitForLoadedAsync();
         }
 
         public async Task CreateUserAsync(string email, string password)
         {
-            await ClickCreateAsync();
-
-            await Executor.FillAsync(EmailInput, email);
-            await Executor.FillAsync(PasswordInput, password);
-
-            // If confirm field exists, fill it
-            if (await PasswordConfirmInput.CountAsync() > 0)
-                await Executor.FillAsync(PasswordConfirmInput, password);
-
-            await Executor.ClickAsync(SaveButton);
+            await Shell.Toolbar.ClickCreateAsync();
+            await Modal.FillFieldAsync("Email", email);
+            await Modal.FillFieldAsync("Password", password);
+            await Modal.ConfirmAsync();
+            await UsersGrid.WaitForLoadedAsync();
         }
     }
 }

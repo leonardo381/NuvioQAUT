@@ -1,27 +1,23 @@
-using Microsoft.Playwright;
 using System.Threading.Tasks;
 using Application.UI.Pages;
+using Framework.Core;
+using Microsoft.Playwright;
 
 namespace Application.UI.Flows
 {
     public class LoginFlow
     {
-        private readonly IPage _page;
+        private readonly LoginPage _login;
 
-        public LoginFlow(IPage page)
+        public LoginFlow(IPage page, ElementExecutor exec)
         {
-            _page = page;
+            _login = new LoginPage(page, exec);
         }
 
-        public async Task LoginToAdminAsync(string identityOrEmail, string password)
+        public async Task AsAdminAsync()
         {
-            var login = new LoginPage(_page);
-            await login.OpenAsync();
-            await login.LoginAsync(identityOrEmail, password);
-
-            // Optionally wait for dashboard to appear (keep asserts out of Application)
-            var dashboard = new DashboardPage(_page);
-            await dashboard.IsLoadedAsync();
+            await _login.GotoAsync();
+            await _login.LoginAsync("admin@admin.com", "admin123");
         }
     }
 }

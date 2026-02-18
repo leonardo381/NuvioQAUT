@@ -1,16 +1,17 @@
+using System;
 using Microsoft.Playwright;
 
 namespace Framework.Core
 {
     public abstract class BasePage
     {
-        protected readonly IPage Page;
-        protected readonly ElementExecutor Executor;
+        protected IPage Page { get; }
+        protected ElementExecutor Exec { get; }
 
-        protected BasePage(IPage page)
+        protected BasePage(IPage page, ElementExecutor executor)
         {
-            Page = page;
-            Executor = new ElementExecutor(page);
+            Page = page ?? throw new ArgumentNullException(nameof(page));
+            Exec = executor ?? throw new ArgumentNullException(nameof(executor));
         }
     }
 }

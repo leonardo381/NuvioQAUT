@@ -18,8 +18,19 @@ namespace Framework.Core
             _policy = policy ?? RetryPolicy.Default;
         }
 
+        //overload so callers can pass only an action
+        public Task ExecuteAsync(Func<Task> action)
+            => ExecuteAsync("operation", action);
+
+        //overload so callers can pass only an action returning T
+        public Task<T> ExecuteAsync<T>(Func<Task<T>> action)
+            => ExecuteAsync("operation", action);
+
         public async Task ExecuteAsync(string operation, Func<Task> action)
         {
+            if (action is null) throw new ArgumentNullException(nameof(action));
+            if (string.IsNullOrWhiteSpace(operation)) operation = "operation";
+
             Exception? last = null;
 
             for (int attempt = 1; attempt <= _policy.Attempts; attempt++)
@@ -46,6 +57,9 @@ namespace Framework.Core
 
         public async Task<T> ExecuteAsync<T>(string operation, Func<Task<T>> action)
         {
+            if (action is null) throw new ArgumentNullException(nameof(action));
+            if (string.IsNullOrWhiteSpace(operation)) operation = "operation";
+
             Exception? last = null;
 
             for (int attempt = 1; attempt <= _policy.Attempts; attempt++)
