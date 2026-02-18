@@ -1,25 +1,19 @@
+using Application.UI.Components.Base;
 using Microsoft.Playwright;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Application.UI.Components
 {
-    public class GridComponent
+    public sealed class GridComponent : UIComponent
     {
-        private readonly IPage _page;
-        private readonly ILocator _root;
+        public GridComponent(IPage page, ILocator root) : base(page, root) { }
 
-        public GridComponent(IPage page, ILocator root)
-        {
-            _page = page;
-            _root = root;
-        }
+        private ILocator Rows => Root.Locator("tbody tr");
+        private ILocator HeaderCells => Root.Locator("thead th");
 
-        private ILocator Rows => _root.Locator("tbody tr");
-        private ILocator HeaderCells => _root.Locator("thead th");
-
-        public async Task<int> GetRowCountAsync() => await Rows.CountAsync();
-        public async Task<int> GetColumnCountAsync() => await HeaderCells.CountAsync();
+        public Task<int> GetRowCountAsync() => Rows.CountAsync();
+        public Task<int> GetColumnCountAsync() => HeaderCells.CountAsync();
 
         public ILocator Cell(int rowIndex, int colIndex)
             => Rows.Nth(rowIndex).Locator("td").Nth(colIndex);
@@ -35,15 +29,17 @@ namespace Application.UI.Components
 
             for (int r = 0; r < rowCount; r++)
             {
-                var row = new List<string>();
+                var row = new List<string>(colCount);
                 for (int c = 0; c < colCount; c++)
-                {
                     row.Add(await GetCellTextAsync(r, c));
-                }
+
                 table.Add(row);
             }
 
             return table;
         }
+
+        public async Task<bool> ContainsTextAsync(string text)
+            => await Root.Locator($"text={text}").CountAsync() > 0;
     }
 }

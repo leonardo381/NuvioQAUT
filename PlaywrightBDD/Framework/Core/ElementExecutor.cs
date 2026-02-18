@@ -28,10 +28,11 @@ namespace Framework.Core
         {
             await _wait.VisibleAsync(locator, timeoutMs);
 
-            await _retry.ExecuteAsync(async () =>
+            await _retry.ExecuteAsync("Click", async () =>
             {
-                await locator.FillAsync(value);
+                await locator.ClickAsync();
             });
+
         }
 
         public async Task PressAsync(ILocator locator, string key, int timeoutMs = 5000)

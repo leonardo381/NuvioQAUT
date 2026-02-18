@@ -1,45 +1,45 @@
+using Application.UI.Components.Base;
 using Microsoft.Playwright;
-using Framework.Core;
 using System.Threading.Tasks;
 
 namespace Application.UI.Components
 {
-    public class SidebarMenu
+    /// <summary>
+    /// Sidebar navigation. Provides generic "open by name"
+    /// so you don't create one context per collection.
+    /// </summary>
+    public sealed class SidebarMenu : UIComponent
     {
-        private readonly IPage _page;
-        private readonly ElementExecutor _executor;
+        public SidebarMenu(IPage page, ILocator root) : base(page, root) { }
 
-        public SidebarMenu(IPage page)
+        // Optional: expand a "Collections" section if it exists
+        private ILocator CollectionsSection =>
+            Root.Locator("a:has-text('Collections'), button:has-text('Collections')").First;
+
+        public async Task OpenCollectionsSectionAsync()
         {
-            _page = page;
-            _executor = new ElementExecutor(page);
+            if (await CollectionsSection.CountAsync() > 0)
+                await Exec.ClickAsync(CollectionsSection);
         }
 
-        private ILocator SidebarRoot => _page.Locator("aside, nav, .sidebar").First;
-
-        // PocketBase often shows collections in sidebar. Update these selectors to your UI.
-        private ILocator CollectionsLink => SidebarRoot.Locator("a:has-text('Collections'), a:has-text('Collection')").First;
-        private ILocator UsersLink => SidebarRoot.Locator("a:has-text('Users')").First;
-
-        public async Task OpenCollectionsAsync()
+        /// <summary>
+        /// Generic: open any collection by visible name in the sidebar.
+        /// </summary>
+        public async Task OpenCollectionAsync(string collectionName)
         {
-            if (await CollectionsLink.CountAsync() > 0)
-                await _executor.ClickAsync(CollectionsLink);
-        }
+            // Some UIs require expanding a section first
+            await OpenCollectionsSectionAsync();
 
-        public async Task OpenUsersAsync()
-        {
-            // In some PB UIs users are directly in sidebar, in others under Collections.
-            if (await UsersLink.CountAsync() > 0)
-            {
-                await _executor.ClickAsync(UsersLink);
+            var link = Root.Locator($"a:has-text('{collectionName}')").First;
+
+            // If not found, do nothing for now (or throw later).
+            if (await link.CountAsync() == 0)
                 return;
-            }
 
-            await OpenCollectionsAsync();
-
-            if (await UsersLink.CountAsync() > 0)
-                await _executor.ClickAsync(UsersLink);
+            await Exec.ClickAsync(link);
         }
+
+        // Convenience wrappers if you still want them
+        public Task OpenUsersAsync() => OpenCollectionAsync("Users");
     }
 }
