@@ -1,27 +1,39 @@
-using System.Threading.Tasks;
 using Framework.Core;
 using Microsoft.Playwright;
+using System.Threading.Tasks;
 
 namespace Application.UI.Pages
 {
-    public class LoginPage : BasePage
+    public sealed class LoginPage : BasePage
     {
-        private ILocator Email => Page.Locator("input[name='email']");
-        private ILocator Password => Page.Locator("input[name='password']");
-        private ILocator Submit => Page.Locator("button[type='submit']");
+        private IFrameLocator Frame => Page.FrameLocator("iframe");
 
-        public LoginPage(IPage page, ElementExecutor executor) : base(page, executor) { }
+        private ILocator IdentityInput =>
+            Frame.Locator("input[type='email']");
+
+        private ILocator PasswordInput =>
+            Frame.Locator("input[type='password']");
+
+        private ILocator SubmitButton =>
+            Frame.GetByRole(AriaRole.Button, new() { Name = "Login" });
+
+        public LoginPage(IPage page, ElementExecutor executor)
+            : base(page, executor)
+        {
+        }
 
         public async Task GotoAsync()
         {
-            await Page.GotoAsync("/_/");
+            await Page.GotoAsync("https://pocketbase.io/demo/");
         }
 
         public async Task LoginAsync(string email, string password)
         {
-            await Exec.FillAsync(Email, email);
-            await Exec.FillAsync(Password, password);
-            await Exec.ClickAsync(Submit);
+            await GotoAsync();
+
+            await Exec.FillAsync(IdentityInput, email);
+            await Exec.FillAsync(PasswordInput, password);
+            await Exec.ClickAsync(SubmitButton);
         }
     }
 }

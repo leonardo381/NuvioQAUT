@@ -1,3 +1,4 @@
+using Framework.Assertions;
 using Framework.Engine;
 using Microsoft.Playwright;
 using NUnit.Framework;
@@ -12,12 +13,22 @@ namespace Framework.Core
     {
         protected IPage Page => Ctx.Page;
 
-        //Create a single executor instance per test, with explicit dependencies
+        // One executor per test
         private ElementExecutor? _executor;
         protected ElementExecutor Executor => _executor ??= new ElementExecutor(
             waiter: new Waiter(),
             retry: new RetryHandler()
         );
+
+        private UiAssert? _ui;
+        protected UiAssert UI => _ui ??= new UiAssert(Page);
+
+        [SetUp]
+        public void ResetPerTestServices()
+        {
+            _executor = null;
+            _ui = null;
+        }
 
         [TearDown]
         public async Task CaptureScreenshotOnFailure()

@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System;
 using System.Threading.Tasks;
 
 namespace Framework.Engine
@@ -18,11 +19,21 @@ namespace Framework.Engine
 
         public async Task LaunchAsync()
         {
-            Browser = _settings.Browser.ToLower() switch
+            Console.WriteLine(
+                $"[BrowserManager] Launching '{_settings.Browser}' " +
+                $"(Headless={_settings.Headless}, SlowMo={_settings.SlowMoMs}ms)...");
+
+            var launchOptions = new BrowserTypeLaunchOptions
             {
-                "firefox" => await _engine.Playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions { Headless = _settings.Headless }),
-                "webkit" => await _engine.Playwright.Webkit.LaunchAsync(new BrowserTypeLaunchOptions { Headless = _settings.Headless }),
-                _ => await _engine.Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = _settings.Headless })
+                Headless = _settings.Headless,
+                SlowMo = _settings.SlowMoMs > 0 ? _settings.SlowMoMs : 0
+            };
+
+            Browser = _settings.Browser.ToLowerInvariant() switch
+            {
+                "firefox" => await _engine.Playwright.Firefox.LaunchAsync(launchOptions),
+                "webkit"  => await _engine.Playwright.Webkit.LaunchAsync(launchOptions),
+                _         => await _engine.Playwright.Chromium.LaunchAsync(launchOptions)
             };
         }
 
