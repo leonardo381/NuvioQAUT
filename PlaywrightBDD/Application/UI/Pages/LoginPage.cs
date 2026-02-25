@@ -6,16 +6,15 @@ namespace Application.UI.Pages
 {
     public sealed class LoginPage : BasePage
     {
-        private IFrameLocator Frame => Page.FrameLocator("iframe");
-
         private ILocator IdentityInput =>
-            Frame.Locator("input[type='email']");
+            Page.Locator("input[name='identity'], input[name='email'], input[type='email']");
 
         private ILocator PasswordInput =>
-            Frame.Locator("input[type='password']");
+            Page.Locator("input[name='password'], input[type='password']");
 
         private ILocator SubmitButton =>
-            Frame.GetByRole(AriaRole.Button, new() { Name = "Login" });
+            Page.GetByRole(AriaRole.Button, new() { Name = "Sign in" })
+                .Or(Page.GetByRole(AriaRole.Button, new() { Name = "Login" }));
 
         public LoginPage(IPage page, ElementExecutor executor)
             : base(page, executor)
@@ -24,7 +23,7 @@ namespace Application.UI.Pages
 
         public async Task GotoAsync()
         {
-            await Page.GotoAsync("https://pocketbase.io/demo/");
+            await Page.GotoAsync("http://127.0.0.1:8090/_/#/login");
         }
 
         public async Task LoginAsync(string email, string password)

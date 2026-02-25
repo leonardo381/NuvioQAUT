@@ -7,18 +7,47 @@ namespace Application.UI.Components
 {
     public class ModalComponent : UIComponent
     {
-        public ModalComponent(ILocator root, ElementExecutor executor) : base(root, executor) { }
-
-        public async Task FillFieldAsync(string label, string value)
+        public ModalComponent(ILocator root, ElementExecutor executor)
+            : base(root, executor)
         {
-            var input = Root.GetByLabel(label);
-            await Exec.FillAsync(input, value);
         }
 
-        public async Task ConfirmAsync()
+        /// <summary>
+        /// Waits for the modal container to be visible.
+        /// </summary>
+        public async Task WaitForOpenAsync(int timeoutMs = 500)
         {
-            var btn = Root.GetByRole(AriaRole.Button, new() { Name = "Save" });
-            await Exec.ClickAsync(btn);
+            await Root.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = timeoutMs
+            });
+        }
+
+        /// <summary>
+        /// Fills an input by its associated label text inside the modal.
+        /// Uses Exact matching to avoid strict-mode collisions
+        /// like "Password" vs "Password confirm".
+        /// </summary>
+        public async Task FillFieldAsync(string label, string value, int timeoutMs = 5000)
+        {
+            var input = Root.GetByLabel(label, new LocatorGetByLabelOptions
+            {
+                Exact = true
+            });
+
+            await Exec.FillAsync(input, value, timeoutMs);
+        }
+
+        /// <summary>
+        /// Clicks the primary confirm/save button in the modal.
+        /// </summary>
+        public async Task ConfirmAsync(int timeoutMs = 500)
+        {
+            // In your HTML, the button text is "Create"
+            var btn = Root.GetByRole(AriaRole.Button, new() { Name = "Create" });
+
+            await Exec.ClickAsync(btn, timeoutMs);
         }
     }
 }

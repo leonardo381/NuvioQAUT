@@ -11,14 +11,20 @@ namespace Application.UI.Pages
         public GridComponent UsersGrid { get; }
         public ModalComponent Modal { get; }
 
-        //optional shell injection
-        public UsersPage(IPage page, ElementExecutor executor, AppShell? shell = null) : base(page, executor)
+        // optional shell injection
+        public UsersPage(IPage page, ElementExecutor executor, AppShell? shell = null)
+            : base(page, executor)
         {
             Shell = shell ?? new AppShell(page, executor);
 
-            //selectors
-            UsersGrid = new GridComponent(page.Locator(".collection-view"), executor);
-            Modal = new ModalComponent(page.Locator(".modal"), executor);
+            // Grid root: tolerant selectors for PocketBase list view
+            var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
+
+            // ✅ Modal root: your overlay record panel
+            var modalRoot = page.Locator(".overlay-panel.record-panel").First;
+
+            UsersGrid = new GridComponent(gridRoot, executor);
+            Modal     = new ModalComponent(modalRoot, executor);
         }
 
         public async Task OpenAsync()
@@ -30,8 +36,16 @@ namespace Application.UI.Pages
         public async Task CreateUserAsync(string email, string password)
         {
             await Shell.Toolbar.ClickCreateAsync();
-            await Modal.FillFieldAsync("Email", email);
+
+            await Modal.WaitForOpenAsync(10000);
+
+            // label text is literally "email"
+            await Modal.FillFieldAsync("email", email);
+
+            // fill both password fields
             await Modal.FillFieldAsync("Password", password);
+            await Modal.FillFieldAsync("Password confirm", password);
+
             await Modal.ConfirmAsync();
             await UsersGrid.WaitForLoadedAsync();
         }

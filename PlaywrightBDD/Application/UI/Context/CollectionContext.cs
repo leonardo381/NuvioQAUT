@@ -22,13 +22,63 @@ namespace Application.UI.Context
         public CollectionContext(IPage page, ElementExecutor executor)
         {
             _pwPage = page;
-            _page = new CollectionPage(page, executor);
+            _page   = new CollectionPage(page, executor);
         }
 
+        /// <summary>
+        /// Opens a collection by name and waits for its grid to load.
+        /// Uses the sidebar via AppShell instead of hardcoded routes.
+        /// </summary>
         public async Task OpenAsync(string collectionName)
         {
-            await _pwPage.GotoAsync($"/_/collections/{collectionName}");
+            // Use the generic sidebar menu when possible
+            await _page.Shell.Menu.OpenCollectionAsync(collectionName);
             await _page.Grid.WaitForLoadedAsync();
+        }
+
+        /// <summary>
+        /// Creates a new record in the given collection using an object as source.
+        /// Property names are mapped to modal field labels (case-insensitive).
+        ///
+        /// keyColumn is the grid column that uniquely identifies the row (e.g. "email").
+        /// keySelector extracts the key value from the object, for post-create validation.
+        /// </summary>
+        public async Task CreateRecordFromObjectAsync<T>(
+            string collectionName,
+            T data,
+            string keyColumn,
+            Func<T, string> keySelector)
+            where T : class, new()
+        {
+            // 1. Open the collection
+            await OpenAsync(collectionName);
+
+            // 2. Open the "create" modal via toolbar
+            await _page.Shell.Toolbar.ClickCreateAsync();
+
+            // 3. Wait for modal to be visible
+            await _page.Modal.WaitForOpenAsync(10000);
+
+            // 4. Map object -> field labels/values
+            var fieldMap = ObjectToFieldMap(data);
+
+            foreach (var kv in fieldMap)
+            {
+                var label = kv.Key;
+                var value = kv.Value ?? string.Empty;
+
+                // This assumes modal labels ≈ property names (case-insensitive),
+                // which matches your users collection: email, Password, etc.
+                await _page.Modal.FillFieldAsync(label, value);
+            }
+
+            // 5. Confirm and wait for grid reload
+            await _page.Modal.ConfirmAsync();
+            await _page.Grid.WaitForLoadedAsync();
+
+            // 6. Optional: verify that the created row matches the object
+            var key = keySelector(data);
+            await AssertRowMatchesAsync(keyColumn, key, data);
         }
 
         /// <summary>
@@ -41,7 +91,7 @@ namespace Application.UI.Context
             where T : new()
         {
             var rowLocator = await _page.Grid.FindRowByCellEqualsAsync(keyColumn, keyValue);
-            var cells = await _page.Grid.ReadRowAsDictionaryAsync(rowLocator);
+            var cells      = await _page.Grid.ReadRowAsDictionaryAsync(rowLocator);
 
             return MapCellsToObject<T>(cells);
         }
@@ -85,6 +135,40 @@ namespace Application.UI.Context
         // Helpers
         // ------------------------
 
+        /// <summary>
+        /// Maps object properties into a dictionary of "field label" -> "text value".
+        /// By default uses property name as label (case-insensitive match).
+        /// 
+        /// This is where your model/builder logic can plug in later:
+        /// you can replace this logic with attributes or custom mapping 
+        /// between properties and labels.
+        /// </summary>
+        private static IReadOnlyDictionary<string, string?> ObjectToFieldMap<T>(T obj)
+            where T : class
+        {
+            var result = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+            var props = typeof(T)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead);
+
+            foreach (var prop in props)
+            {
+                var name  = prop.Name; // default label = property name
+                var value = prop.GetValue(obj);
+
+                // For now, we just ToString() everything (UI is all text anyway).
+                var text = value?.ToString();
+
+                if (text != null)
+                {
+                    result[name] = text;
+                }
+            }
+
+            return result;
+        }
+
         private static T MapCellsToObject<T>(IReadOnlyDictionary<string, string> cells)
             where T : new()
         {
@@ -105,7 +189,6 @@ namespace Application.UI.Context
                     continue;
 
                 var cellValue = cell.Value ?? string.Empty;
-
                 object? converted = cellValue;
 
                 if (prop.PropertyType != typeof(string))
@@ -143,8 +226,8 @@ namespace Application.UI.Context
 
             foreach (var prop in props)
             {
-                var expVal = prop.GetValue(expected);
-                var actVal = prop.GetValue(actual);
+                var expVal  = prop.GetValue(expected);
+                var actVal  = prop.GetValue(actual);
 
                 var expText = expVal?.ToString() ?? string.Empty;
                 var actText = actVal?.ToString() ?? string.Empty;
@@ -156,6 +239,10 @@ namespace Application.UI.Context
             }
         }
 
+        /// <summary>
+        /// Expose the underlying page mapping in case a test or flow
+        /// needs direct access to grid, modal, or shell.
+        /// </summary>
         public CollectionPage Page => _page;
     }
 }

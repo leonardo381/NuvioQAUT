@@ -1,36 +1,36 @@
 using Application.UI.Components;
 using Framework.Core;
 using Microsoft.Playwright;
-using System;
 
 namespace Application.UI.Pages
 {
     /// <summary>
     /// Generic PocketBase collection page.
-    /// Pure mapping + wiring of component roots.
+    /// Pure mapping + wiring of shared app shell, grid and modal.
     /// </summary>
     public sealed class CollectionPage : BasePage
     {
-        // Shared layout
+        // Shared layout (sidebar, toolbar, toasts)
         public AppShell Shell { get; }
 
-        // Page-specific components
+        // Generic collection grid
         public GridComponent Grid { get; }
+
+        // Generic record modal (create/update)
         public ModalComponent Modal { get; }
 
-        public CollectionPage(IPage page, ElementExecutor executor) : base(page, executor)
+        public CollectionPage(IPage page, ElementExecutor executor)
+            : base(page, executor)
         {
-            // App layout (sidebar/toolbar/toasts)
             Shell = new AppShell(page, executor);
 
-            // Page-specific locators
+            // Grid root: tolerant selectors for PocketBase list/grid
             var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
-            var modalRoot = page.Locator(".modal, [role='dialog']").First;
 
-            if (gridRoot is null) throw new InvalidOperationException("Grid root locator resolved to null.");
-            if (modalRoot is null) throw new InvalidOperationException("Modal root locator resolved to null.");
+            // Modal root: your record panel overlay
+            var modalRoot = page.Locator(".overlay-panel.record-panel").First;
 
-            Grid = new GridComponent(gridRoot, executor);
+            Grid  = new GridComponent(gridRoot, executor);
             Modal = new ModalComponent(modalRoot, executor);
         }
     }

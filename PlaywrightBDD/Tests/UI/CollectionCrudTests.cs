@@ -10,8 +10,10 @@ using Tests.Helpers;
 
 namespace Tests.UI
 {
+    
     public class CollectionCrudTests : BaseTest
     {
+        
         private static string UniqueEmail()
             => $"ui_{Guid.NewGuid():N}@test.com";
 
@@ -25,24 +27,24 @@ namespace Tests.UI
         [Category(TestCategories.Regression)]
         public async Task Users_CreateUser_ShowsInGrid()
         {
-            await Page.PauseAsync();
+            //await Page.PauseAsync();
 
             var nuvio = new Nuvio(Page, Executor);
             await nuvio.Login.AsAdminAsync();
-            /*
+            
             var usersPage = nuvio.Users;
             await usersPage.OpenAsync();
 
-            var email = UniqueEmail();
-
+            var email = "test";
+await Page.PauseAsync();
             await usersPage.CreateUserAsync(email, DefaultPassword);
-
+            
             var row = usersPage.UsersGrid.RowByText(email);
             var count = await row.CountAsync();
 
             GenericAssert.IsTrue(count > 0,
                 $"Expected to find a row for '{email}' after creation, but none was found.");
-                */
+                
         }
 
         // -----------------------------
