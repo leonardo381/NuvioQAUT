@@ -12,11 +12,14 @@ namespace Application.UI.Components
 
         public AppShell(IPage page, ElementExecutor executor)
         {
-            // Adjust selectors to match your app layout if needed.
+           /*
             var sidebarRoot = page.Locator("aside");
             var toolbarRoot = page.Locator("header");
             var toastRoot = page.Locator(".toast-container");
-
+            */
+            var sidebarRoot = page.Locator(".collection-sidebar");
+            var toolbarRoot = page.Locator(".page-header");
+            var toastRoot = page.Locator(".toasts-wrapper");
             Menu = new SidebarMenu(sidebarRoot, executor);
             Toolbar = new Toolbar(toolbarRoot, executor);
             Toasts = new ToastsComponent(toastRoot, executor);

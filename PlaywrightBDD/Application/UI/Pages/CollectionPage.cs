@@ -4,31 +4,25 @@ using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
-    /// <summary>
-    /// Generic PocketBase collection page.
-    /// Pure mapping + wiring of shared app shell, grid and modal.
-    /// </summary>
-    public sealed class CollectionPage : BasePage
+    public sealed class CollectionPage
     {
-        // Shared layout (sidebar, toolbar, toasts)
-        public AppShell Shell { get; }
+        public IPage Page { get; }
 
-        // Generic collection grid
+        public AppShell AppShell { get; }
+
+        // Optional convenience forwarding
+        public SidebarMenu Menu => AppShell.Menu;
+        public Toolbar Toolbar => AppShell.Toolbar;
+
         public GridComponent Grid { get; }
-
-        // Generic record modal (create/update)
         public ModalComponent Modal { get; }
 
         public CollectionPage(IPage page, ElementExecutor executor)
-            : base(page, executor)
         {
-            Shell = new AppShell(page, executor);
-
-            // Grid root: tolerant selectors for PocketBase list/grid
-            var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
-
-            // Modal root: your record panel overlay
-            var modalRoot = page.Locator(".overlay-panel.record-panel").First;
+            Page = page;
+            AppShell = new AppShell(page, executor);       
+             var gridRoot = page.Locator(".table-wrapper");
+            var modalRoot = page.Locator(".overlay-panel.record-panel");
 
             Grid  = new GridComponent(gridRoot, executor);
             Modal = new ModalComponent(modalRoot, executor);

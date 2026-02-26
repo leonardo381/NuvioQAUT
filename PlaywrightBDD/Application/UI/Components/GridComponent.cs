@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace Application.UI.Components
 {
+    /// <summary>
+    /// Represents a generic table/grid component.
+    /// Pure UI mapping + small helpers to support generic CRUD flows.
+    /// </summary>
     public class GridComponent : UIComponent
     {
         private ILocator HeaderCells => Root.Locator("thead tr th");
@@ -16,6 +20,11 @@ namespace Application.UI.Components
 
         public GridComponent(ILocator root, ElementExecutor executor) : base(root, executor) { }
 
+        /// <summary>
+        /// Waits for the grid to be considered loaded:
+        /// - optional loading spinner disappears
+        /// - grid root becomes visible.
+        /// </summary>
         public async Task WaitForLoadedAsync()
         {
             // Tolerant wait: spinner might not exist
@@ -38,9 +47,20 @@ namespace Application.UI.Components
             });
         }
 
+        /// <summary>
+        /// Convenience alias to keep naming consistent with other components.
+        /// </summary>
+        public Task WaitLoadedAsync() => WaitForLoadedAsync();
+
+        /// <summary>
+        /// Returns all rows that contain the given text anywhere.
+        /// </summary>
         public ILocator RowByText(string text)
             => BodyRows.Filter(new LocatorFilterOptions { HasTextString = text });
 
+        /// <summary>
+        /// Builds a map of normalized header text → column index.
+        /// </summary>
         public async Task<Dictionary<string, int>> GetColumnIndexMapAsync()
         {
             var headers = await HeaderCells.AllTextContentsAsync();
@@ -62,6 +82,10 @@ namespace Application.UI.Components
             return map;
         }
 
+        /// <summary>
+        /// Finds the first row where the given column's cell equals the expected value.
+        /// Returns the row locator.
+        /// </summary>
         public async Task<ILocator> FindRowByCellEqualsAsync(string columnName, string expectedValue)
         {
             var map = await GetColumnIndexMapAsync();
@@ -86,12 +110,18 @@ namespace Application.UI.Components
                 $"Row not found where column '{columnName}' equals '{expectedValue}'.");
         }
 
+        /// <summary>
+        /// Generic helper used internally and by contexts: get text of a cell in a row by column index.
+        /// </summary>
         public async Task<string> GetCellTextAsync(ILocator row, int columnIndex)
         {
             var cell = row.Locator($"td:nth-child({columnIndex + 1})");
             return Normalize(await cell.First.InnerTextAsync());
         }
 
+        /// <summary>
+        /// Reads a row into a dictionary: header -> cell text.
+        /// </summary>
         public async Task<Dictionary<string, string>> ReadRowAsDictionaryAsync(ILocator row)
         {
             var colMap = await GetColumnIndexMapAsync();
@@ -107,6 +137,64 @@ namespace Application.UI.Components
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Finds the index (0-based) of the first row where a specific column equals the expected value.
+        /// Returns null if no row matches.
+        /// </summary>
+        public async Task<int?> FindRowIndexByColumnAsync(string columnName, string expectedValue)
+        {
+            var map = await GetColumnIndexMapAsync();
+
+            if (!map.TryGetValue(Normalize(columnName), out var colIndex))
+                throw new InvalidOperationException($"Column '{columnName}' not found in grid headers.");
+
+            var rowCount = await BodyRows.CountAsync();
+            if (rowCount == 0)
+                return null;
+
+            for (int r = 0; r < rowCount; r++)
+            {
+                var row = BodyRows.Nth(r);
+                var actual = await GetCellTextAsync(row, colIndex);
+
+                if (string.Equals(Normalize(actual), Normalize(expectedValue), StringComparison.OrdinalIgnoreCase))
+                    return r;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the text of a cell by row index and column name.
+        /// </summary>
+        public async Task<string?> GetCellTextAsync(int rowIndex, string columnName)
+        {
+            var map = await GetColumnIndexMapAsync();
+
+            if (!map.TryGetValue(Normalize(columnName), out var colIndex))
+                throw new InvalidOperationException($"Column '{columnName}' not found in grid headers.");
+
+            var rowCount = await BodyRows.CountAsync();
+            if (rowIndex < 0 || rowIndex >= rowCount)
+                throw new ArgumentOutOfRangeException(nameof(rowIndex), $"Row index {rowIndex} is out of range. Row count: {rowCount}.");
+
+            var row = BodyRows.Nth(rowIndex);
+            return await GetCellTextAsync(row, colIndex);
+        }
+
+        /// <summary>
+        /// Clicks a row by index. Contexts can use this before Edit/Delete.
+        /// </summary>
+        public async Task ClickRowAsync(int rowIndex)
+        {
+            var rowCount = await BodyRows.CountAsync();
+            if (rowIndex < 0 || rowIndex >= rowCount)
+                throw new ArgumentOutOfRangeException(nameof(rowIndex), $"Row index {rowIndex} is out of range. Row count: {rowCount}.");
+
+            var row = BodyRows.Nth(rowIndex);
+            await Exec.ClickAsync(row);
         }
 
         private static string Normalize(string? s)

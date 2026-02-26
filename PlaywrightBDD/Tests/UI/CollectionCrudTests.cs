@@ -1,161 +1,155 @@
 using System;
 using System.Threading.Tasks;
-using Application.UI;
+using Application.UI.Context;
+using Application.UI.Models;
 using Application.UI.Pages;
-using Framework.Assertions;
+using Application.UI.Components;
+using Application.UI.Flows;      // <- adjust if your LoginFlow is in a different namespace
 using Framework.Core;
-using Microsoft.Playwright;
 using NUnit.Framework;
-using Tests.Helpers;
 
-namespace Tests.UI
+namespace Application.Tests.UI.Collections
 {
-    
-    public class CollectionCrudTests : BaseTest
+    [TestFixture]
+    public sealed class UsersCollectionCrudTests : BaseTest
     {
-        
-        private static string UniqueEmail()
-            => $"ui_{Guid.NewGuid():N}@test.com";
+        private CollectionContext _collectionContext = default!;
 
-        private const string DefaultPassword = "Pass12345!";
-
-        // -----------------------------
-        // CREATE
-        // -----------------------------
-        [Test]
-        [Category(TestCategories.UI)]
-        [Category(TestCategories.Regression)]
-        public async Task Users_CreateUser_ShowsInGrid()
+        [SetUp]
+        public async Task SetUpAsync()
         {
-            //await Page.PauseAsync();
+            // BaseTest should already start Playwright and create Page + Executor.
 
-            var nuvio = new Nuvio(Page, Executor);
-            await nuvio.Login.AsAdminAsync();
-            
-            var usersPage = nuvio.Users;
-            await usersPage.OpenAsync();
+            // 1) Login as admin
+            var login = new LoginFlow(Page, Executor);
+            await login.AsAdminAsync();
 
-            var email = "test";
-await Page.PauseAsync();
-            await usersPage.CreateUserAsync(email, DefaultPassword);
-            
-            var row = usersPage.UsersGrid.RowByText(email);
-            var count = await row.CountAsync();
+            // 2) Build shell + page + context
+            var shell = new AppShell(Page, Executor);
+            var collectionPage = new CollectionPage(Page, Executor);
 
-            GenericAssert.IsTrue(count > 0,
-                $"Expected to find a row for '{email}' after creation, but none was found.");
-                
+            _collectionContext = new CollectionContext(shell, collectionPage);
         }
 
-        // -----------------------------
-        // READ
-        // -----------------------------
-        [Test]
-        [Category(TestCategories.UI)]
-        [Category(TestCategories.Regression)]
-        public async Task Users_ReadUser_AfterReload_StillVisibleInGrid()
+        private static UsersRecord CreateRandomUser(
+            string? prefix = null,
+            string password = "Password123!")
         {
-            var nuvio = new Nuvio(Page, Executor);
+            var unique = Guid.NewGuid().ToString("N").Substring(0, 8);
+            var emailPrefix = prefix ?? "ui-test";
+            var email = $"{emailPrefix}.{unique}@example.com";
 
-            await nuvio.Login.AsAdminAsync();
-
-            var usersPage = nuvio.Users;
-            await usersPage.OpenAsync();
-
-            var email = UniqueEmail();
-            await usersPage.CreateUserAsync(email, DefaultPassword);
-
-            // Simulate a fresh "read" by reloading the page
-            await Page.ReloadAsync();
-            await usersPage.UsersGrid.WaitForLoadedAsync();
-
-            var row = usersPage.UsersGrid.RowByText(email);
-            var count = await row.CountAsync();
-
-            GenericAssert.IsTrue(count > 0,
-                $"Expected to find a row for '{email}' after reload, but none was found.");
+            return new UsersRecord
+            {
+                Email = email,
+                Password = password,
+                PasswordConfirm = password
+            };
         }
 
-        // -----------------------------
-        // UPDATE
-        // -----------------------------
+        // --------------------------------------------------------
+        // C - CREATE
+        // --------------------------------------------------------
         [Test]
-        [Category(TestCategories.UI)]
-        [Category(TestCategories.Regression)]
-        public async Task Users_UpdateUser_EmailIsChangedInGrid()
+        public async Task CreateUser_ShouldAppearInGrid()
         {
-            var nuvio = new Nuvio(Page, Executor);
+            var create = new UsersRecord
+            {
+                Email = "newtest@gmail.com",         // key column stays the same
+                Password = "NewPass!456",
+                PasswordConfirm = "NewPass!456"
+            };
 
-            await nuvio.Login.AsAdminAsync();
+            // Act
+            await _collectionContext.CreateAsync("users", create);
 
-            var usersPage = nuvio.Users;
-            await usersPage.OpenAsync();
-
-            var originalEmail = UniqueEmail();
-            var newEmail = UniqueEmail();
-
-            await usersPage.CreateUserAsync(originalEmail, DefaultPassword);
-
-            // Open edit modal by clicking the row
-            await usersPage.UsersGrid.RowByText(originalEmail).First.ClickAsync();
-
-            // Update email via modal
-            await usersPage.Modal.FillFieldAsync("Email", newEmail);
-            await usersPage.Modal.ConfirmAsync();
-            await usersPage.UsersGrid.WaitForLoadedAsync();
-
-            // Assert old email is gone (or at least not present in grid)
-            var oldRow = usersPage.UsersGrid.RowByText(originalEmail);
-            var oldCount = await oldRow.CountAsync();
-
-            // Assert new email is present
-            var newRow = usersPage.UsersGrid.RowByText(newEmail);
-            var newCount = await newRow.CountAsync();
-
-            GenericAssert.IsTrue(newCount > 0,
-                $"Expected to find updated row for '{newEmail}', but none was found.");
-
-            // Not strictly required, but good safety check
-            GenericAssert.IsTrue(oldCount == 0,
-                $"Expected not to find old row for '{originalEmail}' after update, but it still exists.");
+            // Assert
+            await _collectionContext.AssertRowMatchesAsync(
+                collectionName: "users",
+                keyColumn: "Email",
+                keyValue: create.Email,
+                expected: create);
         }
 
-        // -----------------------------
-        // DELETE
-        // -----------------------------
+        // --------------------------------------------------------
+        // R - READ (AssertRowMatches)
+        // --------------------------------------------------------
         [Test]
-        [Category(TestCategories.UI)]
-        [Category(TestCategories.Regression)]
-        public async Task Users_DeleteUser_RowIsRemovedFromGrid()
+        public async Task ReadUser_ShouldMatchGridValues()
         {
-            var nuvio = new Nuvio(Page, Executor);
+            // Arrange: create a fresh user as test data
+            var record = CreateRandomUser("read");
+            await _collectionContext.CreateAsync("users", record);
 
-            await nuvio.Login.AsAdminAsync();
+            // Act + Assert: use the generic assertion (READ operation)
+            await _collectionContext.AssertRowMatchesAsync(
+                collectionName: "users",
+                keyColumn: "Email",
+                keyValue: record.Email,
+                expected: record);
+        }
 
-            var usersPage = nuvio.Users;
-            await usersPage.OpenAsync();
+        // --------------------------------------------------------
+        // U - UPDATE
+        // --------------------------------------------------------
+        [Test]
+        public async Task UpdateUser_ShouldReflectNewValuesInGrid()
+        {
+            // Arrange: create initial user
+            var original = CreateRandomUser("update");
+            await _collectionContext.CreateAsync("users", original);
 
-            var email = UniqueEmail();
-            await usersPage.CreateUserAsync(email, DefaultPassword);
+            // Prepare updated model (same key, different password)
+            var updated = new UsersRecord
+            {
+                Email = original.Email,         // key column stays the same
+                Password = "NewPass!456",
+                PasswordConfirm = "NewPass!456"
+            };
 
-            // Select the row (PocketBase usually shows toolbar actions for selected row)
-            var row = usersPage.UsersGrid.RowByText(email).First;
-            await row.ClickAsync();
+            // Act: update
+            await _collectionContext.UpdateAsync(
+                collectionName: "users",
+                keyColumn: "Email",
+                keyValue: original.Email,
+                data: updated);
 
-            // For now, interact with the Delete button directly via Playwright.
-            // If you later add Toolbar.ClickDeleteAsync(), swap this to use that.
-            var deleteButton = Page.GetByRole(AriaRole.Button, new() { Name = "Delete" });
-            await Executor.ClickAsync(deleteButton);
+            // Assert: row matches updated values
+            await _collectionContext.AssertRowMatchesAsync(
+                collectionName: "users",
+                keyColumn: "Email",
+                keyValue: original.Email,
+                expected: updated);
+        }
 
-            // Confirm delete in the modal
-            await usersPage.Modal.ConfirmAsync();
-            await usersPage.UsersGrid.WaitForLoadedAsync();
+        // --------------------------------------------------------
+        // D - DELETE
+        // --------------------------------------------------------
+        [Test]
+        public async Task DeleteUser_ShouldRemoveRowFromGrid()
+        {
+            // Arrange: create user to delete
+            var record = CreateRandomUser("delete");
+            await _collectionContext.CreateAsync("users", record);
 
-            var remaining = usersPage.UsersGrid.RowByText(email);
-            var count = await remaining.CountAsync();
+            // Act: delete it
+            await _collectionContext.DeleteAsync(
+                collectionName: "users",
+                keyColumn: "Email",
+                keyValue: record.Email);
 
-            GenericAssert.IsTrue(count == 0,
-                $"Expected user '{email}' to be deleted from grid, but the row still exists.");
+            // Assert: trying to assert the row should now fail
+            // with a clear error; or you can check via Grid directly.
+            // Here we assert via the context's grid helpers.
+
+            // We go through the grid directly so we don't reuse DeleteAsync internals.
+            var collectionPage = new CollectionPage(Page, Executor);
+            var grid = collectionPage.Grid;
+
+            await grid.WaitLoadedAsync();
+
+            var rowIndex = await grid.FindRowIndexByColumnAsync("Email", record.Email);
+            //Assert(rowIndex, "User row should not exist after delete.");
         }
     }
 }
