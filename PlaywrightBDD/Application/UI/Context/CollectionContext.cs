@@ -69,10 +69,7 @@ namespace Application.UI.Context
         {
             await OpenAsync(collectionName);
             var rowIndex = await FindRowOrThrowAsync(keyColumn, keyValue);
-
-            // select row, click edit
             await Grid.ClickRowAsync(rowIndex);
-            await Toolbar.ClickEditAsync();
             await Modal.WaitOpenAsync();
             await FillModalFromRecordAsync(data);
             await Modal.ConfirmAsync();

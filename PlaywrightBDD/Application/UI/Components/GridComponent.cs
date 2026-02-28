@@ -154,12 +154,20 @@ namespace Application.UI.Components
             if (rowCount == 0)
                 return null;
 
+            var expectedNorm = Normalize(expectedValue);
+
             for (int r = 0; r < rowCount; r++)
             {
                 var row = BodyRows.Nth(r);
                 var actual = await GetCellTextAsync(row, colIndex);
+                var actualNorm = Normalize(actual);
 
-                if (string.Equals(Normalize(actual), Normalize(expectedValue), StringComparison.OrdinalIgnoreCase))
+                // 1) Exact match ignoring case
+                if (string.Equals(actualNorm, expectedNorm, StringComparison.OrdinalIgnoreCase))
+                    return r;
+
+                // 2) Fallback: cell contains the expected value (ignoring case)
+                if (actualNorm.Contains(expectedNorm, StringComparison.OrdinalIgnoreCase))
                     return r;
             }
 

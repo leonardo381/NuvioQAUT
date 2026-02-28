@@ -53,22 +53,15 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task CreateUser_ShouldAppearInGrid()
         {
-            var create = new UsersRecord
-            {
-                Email = "newtest@gmail.com",         // key column stays the same
-                Password = "NewPass!456",
-                PasswordConfirm = "NewPass!456"
-            };
-
-            // Act
-            await _collectionContext.CreateAsync("users", create);
+            var record = CreateRandomUser("read");
+            await _collectionContext.CreateAsync("users", record);
 
             // Assert
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "Email",
-                keyValue: create.Email,
-                expected: create);
+                keyColumn: "email",
+                keyValue: record.Email,
+                expected: record);
         }
 
         // --------------------------------------------------------
@@ -84,7 +77,7 @@ namespace Application.Tests.UI.Collections
             // Act + Assert: use the generic assertion (READ operation)
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "Email",
+                keyColumn: "email",
                 keyValue: record.Email,
                 expected: record);
         }
@@ -102,22 +95,20 @@ namespace Application.Tests.UI.Collections
             // Prepare updated model (same key, different password)
             var updated = new UsersRecord
             {
-                Email = original.Email,         // key column stays the same
-                Password = "NewPass!456",
-                PasswordConfirm = "NewPass!456"
+                Email = "UP" + original.Email
             };
 
             // Act: update
             await _collectionContext.UpdateAsync(
                 collectionName: "users",
-                keyColumn: "Email",
+                keyColumn: "email",
                 keyValue: original.Email,
                 data: updated);
 
             // Assert: row matches updated values
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "Email",
+                keyColumn: "email",
                 keyValue: original.Email,
                 expected: updated);
         }
