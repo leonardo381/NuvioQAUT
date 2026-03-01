@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,22 +8,23 @@ namespace Framework.Engine
 {
     public abstract class TestLifecycleManager
     {
+        //Global settings loaded once per process
+        private static readonly ExecutionSettings GlobalSettings;
+
+        static TestLifecycleManager()
+        {
+            GlobalSettings = EnvironmentManager.Load();
+            Directory.CreateDirectory(GlobalSettings.ArtifactDir);
+        }
+
+        protected ExecutionSettings Settings => GlobalSettings;
+
+        // Per-test
         protected PlaywrightEngine Engine = default!;
         protected BrowserManager BrowserManager = default!;
-        protected ContextManager Ctx = default!;
-
-        protected ExecutionSettings Settings = default!;
+        protected ContextManager? Ctx;
 
         private bool _needsUi;
-        private bool _uiInitialized;
-
-        [OneTimeSetUp]
-        public async Task GlobalSetup()
-        {
-            Settings = EnvironmentManager.Load();
-            Directory.CreateDirectory(Settings.ArtifactDir);
-            await Task.CompletedTask;
-        }
 
         [SetUp]
         public async Task Setup()
@@ -31,7 +33,15 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
-            await EnsureUiInitializedAsync();
+            // Per-test engine + browser + context
+            Engine = new PlaywrightEngine();
+            await Engine.InitializeAsync();
+
+            BrowserManager = new BrowserManager(Engine, Settings);
+            await BrowserManager.LaunchAsync();
+
+            if (BrowserManager.Browser is null)
+                throw new InvalidOperationException("BrowserManager.Browser is null after LaunchAsync().");
 
             Ctx = new ContextManager(BrowserManager.Browser, Settings);
             await Ctx.CreateAsync();
@@ -43,31 +53,20 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
-            await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
-        }
+            if (Ctx is not null)
+            {
+                await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
+            }
 
-        [OneTimeTearDown]
-        public async Task GlobalTearDown()
-        {
-            if (!_uiInitialized)
-                return;
+            if (BrowserManager is not null)
+            {
+                await BrowserManager.CloseAsync();
+            }
 
-            await BrowserManager.CloseAsync();
-            await Engine.DisposeAsync();
-        }
-
-        private async Task EnsureUiInitializedAsync()
-        {
-            if (_uiInitialized)
-                return;
-
-            Engine = new PlaywrightEngine();
-            await Engine.InitializeAsync();
-
-            BrowserManager = new BrowserManager(Engine, Settings);
-            await BrowserManager.LaunchAsync();
-
-            _uiInitialized = true;
+            if (Engine is not null)
+            {
+                await Engine.DisposeAsync();
+            }
         }
 
         private static bool ShouldUseUiForThisTest()
@@ -83,6 +82,7 @@ namespace Framework.Engine
             if (isUi) return true;
             if (isApi) return false;
 
+            // default to UI
             return true;
         }
     }

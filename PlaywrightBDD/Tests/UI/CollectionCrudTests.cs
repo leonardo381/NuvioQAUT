@@ -12,6 +12,9 @@ using NUnit.Framework;
 namespace Application.Tests.UI.Collections
 {
     [TestFixture]
+    [FixtureLifeCycle(LifeCycle.InstancePerTestCase)] 
+    [Parallelizable(ParallelScope.All)]
+
     [Category(TestCategories.UI)]
     [Category(TestCategories.Regression)]
     public sealed class UsersCollectionCrudTests : BaseTest

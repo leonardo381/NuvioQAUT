@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -9,13 +10,13 @@ namespace Framework.Engine
         private readonly IBrowser _browser;
         private readonly ExecutionSettings _settings;
 
-        public IBrowserContext Context { get; private set; } = default!;
+        public IBrowserContext? Context { get; private set; }
         public IPage Page { get; private set; } = default!;
 
         public ContextManager(IBrowser browser, ExecutionSettings settings)
         {
-            _browser = browser;
-            _settings = settings;
+            _browser = browser ?? throw new ArgumentNullException(nameof(browser));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         }
 
         public async Task CreateAsync()
@@ -41,17 +42,27 @@ namespace Framework.Engine
 
         public async Task DisposeAsync(string testName)
         {
-            if (_settings.EnableTracing)
+            if (Context is null)
+                return;
+
+            try
             {
-                var traceDir = Path.Combine(_settings.ArtifactDir, "traces");
-                Directory.CreateDirectory(traceDir);
-
-                var tracePath = Path.Combine(traceDir, $"{testName}.zip");
-
-                await Context.Tracing.StopAsync(new TracingStopOptions
+                if (_settings.EnableTracing)
                 {
-                    Path = tracePath
-                });
+                    var traceDir = Path.Combine(_settings.ArtifactDir, "traces");
+                    Directory.CreateDirectory(traceDir);
+
+                    var tracePath = Path.Combine(traceDir, $"{testName}.zip");
+
+                    await Context.Tracing.StopAsync(new TracingStopOptions
+                    {
+                        Path = tracePath
+                    });
+                }
+            }
+            catch (PlaywrightException)
+            {
+
             }
 
             await Context.CloseAsync();
