@@ -33,29 +33,13 @@ namespace Application.Tests.UI.Collections
             _collectionContext = new CollectionContext(shell, collectionPage);
         }
 
-        private static UsersRecord CreateRandomUser(
-            string? prefix = null,
-            string password = "Password123!")
-        {
-            var unique = Guid.NewGuid().ToString("N")[..8];
-            var emailPrefix = prefix ?? "ui-test";
-            var email = $"{emailPrefix}.{unique}@example.com";
-
-            return new UsersRecord
-            {
-                Email = email,
-                Password = password,
-                PasswordConfirm = password
-            };
-        }
-
         // --------------------------------------------------------
         // C - CREATE
         // --------------------------------------------------------
         [Test]
         public async Task CreateUser_ShouldAppearInGrid()
         {
-            var record = CreateRandomUser("create");
+            var record = TestDataFactory.NewUser("create");
 
             await _collectionContext.CreateAsync(
                 collectionName: "users",
@@ -74,7 +58,7 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task ReadUser_ShouldMatchGridValues()
         {
-            var record = CreateRandomUser("read");
+            var record = TestDataFactory.NewUser("read");
 
             await _collectionContext.CreateAsync(
                 collectionName: "users",
@@ -93,24 +77,21 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task UpdateUser_ShouldReflectNewValuesInGrid()
         {
-            var original = CreateRandomUser("update");
-            await _collectionContext.CreateAsync("users", original);
+            var record = TestDataFactory.NewUser("update-orig");
+            await _collectionContext.CreateAsync("users", record);
 
-            var updated = new UsersRecord
-            {
-                Email = "UP" + original.Email
-            };
+            var updated = TestDataFactory.UpdatedUserFrom(record, "update-new");
 
             await _collectionContext.UpdateAsync(
                 collectionName: "users",
                 keyColumn: "email",
-                keyValue: original.Email,
+                keyValue: record.Email,
                 data: updated);
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
                 keyColumn: "email",
-                keyValue: original.Email,
+                keyValue: updated.Email,   // note: key changed
                 expected: updated);
         }
 
@@ -120,7 +101,7 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task DeleteUser_ShouldRemoveRowFromGrid()
         {
-            var record = CreateRandomUser("delete");
+            var record = TestDataFactory.NewUser("delete");
 
             await _collectionContext.CreateAsync(
                 collectionName: "users",
