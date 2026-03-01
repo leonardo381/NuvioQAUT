@@ -8,7 +8,9 @@ namespace Framework.Engine
 {
     public abstract class TestLifecycleManager
     {
-        //Global settings loaded once per process
+        // ----------------------------
+        // Global settings (once)
+        // ----------------------------
         private static readonly ExecutionSettings GlobalSettings;
 
         static TestLifecycleManager()
@@ -19,9 +21,17 @@ namespace Framework.Engine
 
         protected ExecutionSettings Settings => GlobalSettings;
 
-        // Per-test
-        protected PlaywrightEngine Engine = default!;
-        protected BrowserManager BrowserManager = default!;
+        // ----------------------------
+        // Shared engine + browser (per process)
+        // ----------------------------
+        private static readonly object _engineLock = new();
+        private static Task? _engineInitTask;
+        private static PlaywrightEngine? _sharedEngine;
+        private static BrowserManager? _sharedBrowserManager;
+
+        // ----------------------------
+        // Per-test state
+        // ----------------------------
         protected ContextManager? Ctx;
 
         private bool _needsUi;
@@ -33,17 +43,14 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
-            // Per-test engine + browser + context
-            Engine = new PlaywrightEngine();
-            await Engine.InitializeAsync();
+            // Ensure engine + browser exist (shared across tests)
+            await EnsureEngineAndBrowserAsync();
 
-            BrowserManager = new BrowserManager(Engine, Settings);
-            await BrowserManager.LaunchAsync();
+            if (_sharedBrowserManager?.Browser is null)
+                throw new InvalidOperationException("Shared browser is null after initialization.");
 
-            if (BrowserManager.Browser is null)
-                throw new InvalidOperationException("BrowserManager.Browser is null after LaunchAsync().");
-
-            Ctx = new ContextManager(BrowserManager.Browser, Settings);
+            // Per-test context + page
+            Ctx = new ContextManager(_sharedBrowserManager.Browser, Settings);
             await Ctx.CreateAsync();
         }
 
@@ -53,22 +60,50 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
+            // Per-test cleanup only: context + page
             if (Ctx is not null)
             {
                 await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
             }
+        }
 
-            if (BrowserManager is not null)
-            {
-                await BrowserManager.CloseAsync();
-            }
+        // ----------------------------
+        // Shared engine/browser init
+        // ----------------------------
+        private static Task EnsureEngineAndBrowserAsync()
+        {
+            // Fast path: already initializing or initialized
+            var existing = _engineInitTask;
+            if (existing != null)
+                return existing;
 
-            if (Engine is not null)
+            // Slow path: first thread wins and kicks off init
+            lock (_engineLock)
             {
-                await Engine.DisposeAsync();
+                if (_engineInitTask == null)
+                {
+                    _engineInitTask = InitializeEngineAndBrowserAsync();
+                }
+
+                return _engineInitTask;
             }
         }
 
+        private static async Task InitializeEngineAndBrowserAsync()
+        {
+            _sharedEngine = new PlaywrightEngine();
+            await _sharedEngine.InitializeAsync();
+
+            _sharedBrowserManager = new BrowserManager(_sharedEngine, GlobalSettings);
+            await _sharedBrowserManager.LaunchAsync();
+
+            if (_sharedBrowserManager.Browser is null)
+                throw new InvalidOperationException("BrowserManager.Browser is null after LaunchAsync().");
+        }
+
+        // ----------------------------
+        // Category-driven UI/API toggle
+        // ----------------------------
         private static bool ShouldUseUiForThisTest()
         {
             var cats = TestContext.CurrentContext.Test.Properties["Category"]
@@ -82,7 +117,7 @@ namespace Framework.Engine
             if (isUi) return true;
             if (isApi) return false;
 
-            // default to UI
+            // default to UI if unspecified
             return true;
         }
     }

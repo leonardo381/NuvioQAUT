@@ -11,7 +11,7 @@ namespace Framework.Core
 {
     public abstract class BaseTest : TestLifecycleManager
     {
-        protected IPage Page => Ctx.Page;
+        protected IPage Page => Ctx!.Page;
         private ElementExecutor? _executor;
         protected ElementExecutor Executor => _executor ??= new ElementExecutor(
             waiter: new Waiter(),
