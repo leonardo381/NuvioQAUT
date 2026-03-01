@@ -1,5 +1,0 @@
-<CrudScenario>
-  <Collection>users</Collection>
-  <Email>xmluser@test.com</Email>
-  <Password>12345678</Password>
-</CrudScenario>

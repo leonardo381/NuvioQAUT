@@ -6,11 +6,14 @@ using Application.UI.Pages;
 using Application.UI.Components;
 using Application.UI.Flows;
 using Framework.Core;
+using Tests.Helpers;
 using NUnit.Framework;
 
 namespace Application.Tests.UI.Collections
 {
     [TestFixture]
+    [Category(TestCategories.UI)]
+    [Category(TestCategories.Regression)]
     public sealed class UsersCollectionCrudTests : BaseTest
     {
         private CollectionContext _collectionContext = default!;
@@ -18,13 +21,9 @@ namespace Application.Tests.UI.Collections
         [SetUp]
         public async Task SetUpAsync()
         {
-            // BaseTest should already start Playwright and create Page + Executor.
-
-            // 1) Login as admin
             var login = new LoginFlow(Page, Executor);
             await login.AsAdminAsync();
 
-            // 2) Build shell + page + context
             var shell = new AppShell(Page, Executor);
             var collectionPage = new CollectionPage(Page, Executor);
 
@@ -35,7 +34,7 @@ namespace Application.Tests.UI.Collections
             string? prefix = null,
             string password = "Password123!")
         {
-            var unique = Guid.NewGuid().ToString("N").Substring(0, 8);
+            var unique = Guid.NewGuid().ToString("N")[..8];
             var emailPrefix = prefix ?? "ui-test";
             var email = $"{emailPrefix}.{unique}@example.com";
 
@@ -53,8 +52,11 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task CreateUser_ShouldAppearInGrid()
         {
-            var record = CreateRandomUser("read");
-            await _collectionContext.CreateAsync("users", record);
+            var record = CreateRandomUser("create");
+
+            await _collectionContext.CreateAsync(
+                collectionName: "users",
+                data: record);
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
@@ -64,13 +66,16 @@ namespace Application.Tests.UI.Collections
         }
 
         // --------------------------------------------------------
-        // R - READ (AssertRowMatches)
+        // R - READ
         // --------------------------------------------------------
         [Test]
         public async Task ReadUser_ShouldMatchGridValues()
         {
             var record = CreateRandomUser("read");
-            await _collectionContext.CreateAsync("users", record);
+
+            await _collectionContext.CreateAsync(
+                collectionName: "users",
+                data: record);
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
@@ -113,7 +118,10 @@ namespace Application.Tests.UI.Collections
         public async Task DeleteUser_ShouldRemoveRowFromGrid()
         {
             var record = CreateRandomUser("delete");
-            await _collectionContext.CreateAsync("users", record);
+
+            await _collectionContext.CreateAsync(
+                collectionName: "users",
+                data: record);
 
             await _collectionContext.DeleteAsync(
                 collectionName: "users",
