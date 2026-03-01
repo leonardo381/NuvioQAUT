@@ -110,5 +110,98 @@ namespace Application.UI.Components
 
             await Exec.ClickAsync(button, timeoutMs);
         }
+
+
+        public async Task ClickCloneAsync(int timeoutMs = 5000)
+        {
+            var cloneBtn = Root.GetByRole(AriaRole.Button, new() { Name = "Clone", Exact = false });
+
+            if (await cloneBtn.CountAsync() == 0)
+                throw new PlaywrightException("Clone button not found in record panel.");
+
+            await Exec.ClickAsync(cloneBtn, timeoutMs);
+        }
+
+                // --------- record options menu (… button) ---------
+
+        private ILocator MoreOptionsButton =>
+            Root.GetByRole(AriaRole.Button, new()
+            {
+                Name = "More record options",
+                Exact = false
+            });
+
+        private ILocator DeleteMenuItem =>
+            Root.GetByRole(AriaRole.Menuitem, new()
+            {
+                Name = "Delete",
+                Exact = false
+            });
+
+        private ILocator DuplicateMenuItem =>
+            Root.GetByRole(AriaRole.Menuitem, new()
+            {
+                Name = "Duplicate",
+                Exact = false
+            });
+
+        public async Task OpenMoreOptionsAsync(int timeoutMs = 5000)
+        {
+            await Exec.ClickAsync(MoreOptionsButton, timeoutMs);
+        }
+
+        public async Task ClickDeleteFromMenuAsync(int timeoutMs = 5000)
+        {
+            await OpenMoreOptionsAsync(timeoutMs);
+            await Exec.ClickAsync(DeleteMenuItem, timeoutMs);
+        }
+
+        public async Task ClickDuplicateFromMenuAsync(int timeoutMs = 5000)
+        {
+            await OpenMoreOptionsAsync(timeoutMs);
+            await Exec.ClickAsync(DuplicateMenuItem, timeoutMs);
+        }
+
+        // ---------- global confirm popup ("Do you really want to delete…?") ----------
+
+        // Uses the page behind the modal root to find the confirm overlay
+        private ILocator ConfirmPopup =>
+            Root.Page.Locator(".overlay-panel.confirm-popup");
+
+        private ILocator ConfirmYesButton =>
+            ConfirmPopup.GetByRole(AriaRole.Button, new()
+            {
+                Name  = "Yes",
+                Exact = true
+            });
+
+        public async Task ConfirmDeleteAsync(int timeoutMs = 5000)
+        {
+            await ConfirmPopup.WaitForAsync(new LocatorWaitForOptions
+            {
+                State   = WaitForSelectorState.Visible,
+                Timeout = timeoutMs
+            });
+
+            await Exec.ClickAsync(ConfirmYesButton, timeoutMs);
+
+            await ConfirmPopup.WaitForAsync(new LocatorWaitForOptions
+            {
+                State   = WaitForSelectorState.Detached,
+                Timeout = timeoutMs
+            });
+        }
+
+        /// <summary>
+        /// Full "delete record" UX:
+        /// - open options menu
+        /// - click Delete
+        /// - confirm in popup (Yes)
+        /// </summary>
+        public async Task DeleteRecordAsync(int timeoutMs = 5000)
+        {
+            await ClickDeleteFromMenuAsync(timeoutMs);
+            await ConfirmDeleteAsync(timeoutMs);
+        }
     }
 }

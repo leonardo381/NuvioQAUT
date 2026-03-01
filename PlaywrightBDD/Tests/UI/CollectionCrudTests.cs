@@ -4,7 +4,7 @@ using Application.UI.Context;
 using Application.UI.Models;
 using Application.UI.Pages;
 using Application.UI.Components;
-using Application.UI.Flows;      // <- adjust if your LoginFlow is in a different namespace
+using Application.UI.Flows;
 using Framework.Core;
 using NUnit.Framework;
 
@@ -56,7 +56,6 @@ namespace Application.Tests.UI.Collections
             var record = CreateRandomUser("read");
             await _collectionContext.CreateAsync("users", record);
 
-            // Assert
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
                 keyColumn: "email",
@@ -70,11 +69,9 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task ReadUser_ShouldMatchGridValues()
         {
-            // Arrange: create a fresh user as test data
             var record = CreateRandomUser("read");
             await _collectionContext.CreateAsync("users", record);
 
-            // Act + Assert: use the generic assertion (READ operation)
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
                 keyColumn: "email",
@@ -88,24 +85,20 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task UpdateUser_ShouldReflectNewValuesInGrid()
         {
-            // Arrange: create initial user
             var original = CreateRandomUser("update");
             await _collectionContext.CreateAsync("users", original);
 
-            // Prepare updated model (same key, different password)
             var updated = new UsersRecord
             {
                 Email = "UP" + original.Email
             };
 
-            // Act: update
             await _collectionContext.UpdateAsync(
                 collectionName: "users",
                 keyColumn: "email",
                 keyValue: original.Email,
                 data: updated);
 
-            // Assert: row matches updated values
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
                 keyColumn: "email",
@@ -119,28 +112,18 @@ namespace Application.Tests.UI.Collections
         [Test]
         public async Task DeleteUser_ShouldRemoveRowFromGrid()
         {
-            // Arrange: create user to delete
             var record = CreateRandomUser("delete");
             await _collectionContext.CreateAsync("users", record);
 
-            // Act: delete it
             await _collectionContext.DeleteAsync(
                 collectionName: "users",
-                keyColumn: "Email",
+                keyColumn: "email",
                 keyValue: record.Email);
 
-            // Assert: trying to assert the row should now fail
-            // with a clear error; or you can check via Grid directly.
-            // Here we assert via the context's grid helpers.
-
-            // We go through the grid directly so we don't reuse DeleteAsync internals.
-            var collectionPage = new CollectionPage(Page, Executor);
-            var grid = collectionPage.Grid;
-
-            await grid.WaitLoadedAsync();
-
-            var rowIndex = await grid.FindRowIndexByColumnAsync("Email", record.Email);
-            //Assert(rowIndex, "User row should not exist after delete.");
+            await _collectionContext.AssertRowNotExistsAsync(
+                collectionName: "users",
+                keyColumn: "email",
+                keyValue: record.Email);
         }
     }
 }

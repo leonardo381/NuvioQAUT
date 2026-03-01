@@ -12,13 +12,9 @@ namespace Application.UI.Components
 
         public AppShell(IPage page, ElementExecutor executor)
         {
-           /*
-            var sidebarRoot = page.Locator("aside");
-            var toolbarRoot = page.Locator("header");
-            var toastRoot = page.Locator(".toast-container");
-            */
             var sidebarRoot = page.Locator(".collection-sidebar");
-            var toolbarRoot = page.Locator(".page-header");
+            //var toolbarRoot = page.Locator(".page-header");
+            var toolbarRoot = page.Locator(".page-content");
             var toastRoot = page.Locator(".toasts-wrapper");
             Menu = new SidebarMenu(sidebarRoot, executor);
             Toolbar = new Toolbar(toolbarRoot, executor);

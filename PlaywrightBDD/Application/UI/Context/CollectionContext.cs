@@ -39,6 +39,16 @@ namespace Application.UI.Context
             await Grid.WaitLoadedAsync();
         }
 
+        /// <summary>
+        /// Opens the collection and filters the grid using the toolbar search bar.
+        /// </summary>
+        public async Task SearchAsync(string collectionName, string query)
+        {
+            await OpenAsync(collectionName);
+
+            await Toolbar.SearchAsync(query);
+            await Grid.WaitLoadedAsync();
+        }
         // --------------------
         // CREATE
         // --------------------
@@ -89,19 +99,50 @@ namespace Application.UI.Context
 
             var rowIndex = await FindRowOrThrowAsync(keyColumn, keyValue);
 
+            // 1) Open record panel for the row
             await Grid.ClickRowAsync(rowIndex);
-            await Toolbar.ClickDeleteAsync();
+            await Modal.WaitOpenAsync();
 
-            // TODO: wire to your real delete confirmation UI
-            await HandleDeleteConfirmationAsync();
+            // 2) Let the modal handle Delete + confirm popup
+            await Modal.DeleteRecordAsync();
 
+            // 3) Wait for the record panel to close and grid to refresh
+            await Modal.WaitClosedAsync();
             await Grid.WaitLoadedAsync();
+        }
 
-            // Optional: assert row is gone
-            var maybeRow = await Grid.FindRowIndexByColumnAsync(keyColumn, keyValue);
-            if (maybeRow != null)
-                throw new InvalidOperationException(
-                    $"Row with {keyColumn}='{keyValue}' still present after delete.");
+        // --------------------
+        // CLONE
+        // --------------------
+        /// <summary>
+        /// Clones an existing record (found by keyColumn/keyValue) and saves a new one
+        /// using the provided cloneData (typically overriding the key like email).
+        /// </summary>
+        public async Task CloneAsync(
+            string collectionName,
+            string keyColumn,
+            string keyValue,
+            IRecordData cloneData)
+        {
+            await OpenAsync(collectionName);
+
+            var rowIndex = await FindRowOrThrowAsync(keyColumn, keyValue);
+
+            // 1) Open original record
+            await Grid.ClickRowAsync(rowIndex);
+            await Modal.WaitOpenAsync();
+
+            // 2) Click Clone in the record panel
+            await Modal.ClickCloneAsync();
+            await Modal.WaitOpenAsync();
+
+            // 3) Apply overrides (e.g. new email)
+            await FillModalFromRecordAsync(cloneData);
+
+            // 4) Save cloned record
+            await Modal.ConfirmAsync();
+            await Modal.WaitClosedAsync();
+            await Grid.WaitLoadedAsync();
         }
 
         // --------------------
@@ -140,6 +181,21 @@ namespace Application.UI.Context
                     throw new InvalidOperationException(
                         $"Grid mismatch in column '{columnName}': expected '{expectedNormalized}', got '{actualNormalized}'.");
                 }
+            }
+        }
+
+        public async Task AssertRowNotExistsAsync(
+            string collectionName,
+            string keyColumn,
+            string keyValue)
+        {
+            await OpenAsync(collectionName);
+
+            var rowIndex = await Grid.FindRowIndexByColumnAsync(keyColumn, keyValue);
+            if (rowIndex != null)
+            {
+                throw new InvalidOperationException(
+                    $"Row with {keyColumn}='{keyValue}' still present but expected to be missing.");
             }
         }
 

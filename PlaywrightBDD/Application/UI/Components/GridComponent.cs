@@ -139,6 +139,12 @@ namespace Application.UI.Components
             return result;
         }
 
+
+        private async Task<bool> IsEmptyStateRowAsync(ILocator row)
+        {
+            var marker = row.Locator("h6:has-text(\"No records found\")");
+            return await marker.CountAsync() > 0;
+        }
         /// <summary>
         /// Finds the index (0-based) of the first row where a specific column equals the expected value.
         /// Returns null if no row matches.
@@ -159,6 +165,11 @@ namespace Application.UI.Components
             for (int r = 0; r < rowCount; r++)
             {
                 var row = BodyRows.Nth(r);
+
+                var emptyStateMarker = row.Locator("h6:has-text(\"No records found\")");
+                if (await emptyStateMarker.CountAsync() > 0)
+                    continue;
+
                 var actual = await GetCellTextAsync(row, colIndex);
                 var actualNorm = Normalize(actual);
 
