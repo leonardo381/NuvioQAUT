@@ -91,7 +91,7 @@ namespace Application.Tests.UI.Collections
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
                 keyColumn: "email",
-                keyValue: updated.Email,   // note: key changed
+                keyValue: updated.Email,
                 expected: updated);
         }
 
