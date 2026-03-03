@@ -20,4 +20,10 @@ jobs:
       - run: dotnet restore
       - run: dotnet build --configuration Debug
 
+      - name: Start PocketBase
+        run: |
+          chmod +x ./pocketbase
+          nohup ./pocketbase serve --http=0.0.0.0:8090 &
+          sleep 5
+
       - run: dotnet test --filter "Category=UI"
