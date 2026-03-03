@@ -20,10 +20,7 @@ jobs:
       - run: dotnet restore
       - run: dotnet build --configuration Debug
 
-      - name: Start PocketBase
-        run: |
-          chmod +x ./pocketbase
-          nohup ./pocketbase serve --http=0.0.0.0:8090 &
-          sleep 5
+      - name: Install Playwright browsers
+        run: pwsh ./PlaywrightBDD/bin/Debug/net9.0/playwright.ps1 install --with-deps
 
       - run: dotnet test --filter "Category=UI"
