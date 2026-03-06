@@ -57,34 +57,30 @@ jobs:
         working-directory: NuvioQAUT/PlaywrightBDD
         run: pwsh bin/Debug/net9.0/playwright.ps1 install --with-deps
 
+      # Prepare artifact folders
+      - name: Prepare artifact folders
+        working-directory: NuvioQAUT/PlaywrightBDD
+        run: |
+          mkdir -p artifacts/traces
+          mkdir -p artifacts/screenshots
+
       # Run UI tests
       - name: Run UI tests
         working-directory: NuvioQAUT/PlaywrightBDD
         env:
           BASE_URL: http://127.0.0.1:8090
           HEADLESS: true
-          ADMIN_USER: NuvioAppQAUT@gmail.com
-          ADMIN_PASSWORD: abcd1234
+          ADMIN_USER: ${{ secrets.ADMIN_USER }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          TRACING: true
+          SCREENSHOT_ON_FAILURE: true
+          ARTIFACT_DIR: artifacts
         run: dotnet test --filter "Category=UI"
 
-        # Run Artifacts upload
-      - name: Upload Playwright traces
+      # Upload artifacts even if tests fail
+      - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-traces
-          path: NuvioQAUT/PlaywrightBDD/artifacts/traces/**
-
-      - name: Upload failure screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-screenshots
-          path: NuvioQAUT/PlaywrightBDD/artifacts/screenshots/**
-
-      - name: Upload Nuvio log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuvio-log
-          path: Nuvio/nuvio.log
+          name: test-artifacts
+          path: NuvioQAUT/PlaywrightBDD/artifacts/**
