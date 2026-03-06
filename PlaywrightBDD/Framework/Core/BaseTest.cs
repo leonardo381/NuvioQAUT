@@ -27,33 +27,5 @@ namespace Framework.Core
             _executor = null;
             _ui = null;
         }
-
-        [TearDown]
-        public async Task CaptureScreenshotOnFailure()
-        {
-            var cats = TestContext.CurrentContext.Test.Properties["Category"]
-                .Cast<string>()
-                .Select(c => c.ToLowerInvariant())
-                .ToList();
-
-            if (!cats.Contains("ui"))
-                return;
-
-            if (!Settings.ScreenshotOnFailure)
-                return;
-
-            if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed)
-                return;
-
-            var dir = Path.Combine(Settings.ArtifactDir, "screenshots");
-            Directory.CreateDirectory(dir);
-
-            var path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
-            await Page.ScreenshotAsync(new PageScreenshotOptions
-            {
-                Path = path,
-                FullPage = true
-            });
-        }
     }
 }

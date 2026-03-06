@@ -60,6 +60,14 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
+            // Screenshot first, while page is still alive
+            await CaptureScreenshotOnFailureAsync();
+
+            // hen dispose context, this writes traces too
+            if (Ctx is not null)
+            {
+                await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
+            }
             // Per-test cleanup only: context + page
             if (Ctx is not null)
             {
@@ -119,6 +127,40 @@ namespace Framework.Engine
 
             // default to UI if unspecified
             return true;
+        }
+
+        // ----------------------------
+        // Artifacts
+        // ----------------------------
+        private async Task CaptureScreenshotOnFailureAsync()
+        {
+            var cats = TestContext.CurrentContext.Test.Properties["Category"]
+                .Cast<string>()
+                .Select(c => c.ToLowerInvariant())
+                .ToList();
+
+            if (!cats.Contains("ui"))
+                return;
+
+            if (!Settings.ScreenshotOnFailure)
+                return;
+
+            if (TestContext.CurrentContext.Result.Outcome.Status != NUnit.Framework.Interfaces.TestStatus.Failed)
+                return;
+
+            if (Ctx?.Page is null)
+                return;
+
+            var dir = Path.Combine(Settings.ArtifactDir, "screenshots");
+            Directory.CreateDirectory(dir);
+
+            var path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
+
+            await Ctx.Page.ScreenshotAsync(new Microsoft.Playwright.PageScreenshotOptions
+            {
+                Path = path,
+                FullPage = true
+            });
         }
     }
 }
