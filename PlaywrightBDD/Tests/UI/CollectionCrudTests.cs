@@ -47,7 +47,7 @@ namespace Application.Tests.UI.Collections
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: record.Email,
                 expected: record);
         }
@@ -66,7 +66,7 @@ namespace Application.Tests.UI.Collections
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: record.Email,
                 expected: record);
         }
@@ -84,13 +84,13 @@ namespace Application.Tests.UI.Collections
 
             await _collectionContext.UpdateAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: record.Email,
                 data: updated);
 
             await _collectionContext.AssertRowMatchesAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: updated.Email,
                 expected: updated);
         }
@@ -109,12 +109,12 @@ namespace Application.Tests.UI.Collections
 
             await _collectionContext.DeleteAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: record.Email);
 
             await _collectionContext.AssertRowNotExistsAsync(
                 collectionName: "users",
-                keyColumn: "email",
+                keyColumn: "email x",
                 keyValue: record.Email);
         }
     }
