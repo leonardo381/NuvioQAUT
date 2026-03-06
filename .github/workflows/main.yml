@@ -1,4 +1,4 @@
-name: UI Tests
+name: UI Tests Against Nuvio
 
 on:
   push:
@@ -11,16 +11,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout your QA repo
+      - name: Checkout QA repo
+        uses: actions/checkout@v4
+        with:
+          path: NuvioQAUT
 
-      - uses: actions/setup-dotnet@v4
+      # Checkout Nuvio repo
+      - name: Checkout Nuvio
+        uses: actions/checkout@v4
+        with:
+          repository: https://github.com/leonardo381/Nuvio
+          path: Nuvio
+
+      # Install Go (needed to run Nuvio)
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      # Start Nuvio
+      - name: Start Nuvio
+        working-directory: Nuvio
+        run: |
+          nohup go run ./examples/base serve > nuvio.log 2>&1 &
+          sleep 10
+
+      # Setup .NET for Playwright tests
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
 
-      - run: dotnet restore
-      - run: dotnet build --configuration Debug
+      # Build test project
+      - name: Restore tests
+        working-directory: NuvioQAUT/PlaywrightBDD
+        run: dotnet restore
 
-      - name: Install Playwright browsers
-        run: pwsh ./PlaywrightBDD/bin/Debug/net9.0/playwright.ps1 install --with-deps
+      - name: Build tests
+        working-directory: NuvioQAUT/PlaywrightBDD
+        run: dotnet build --configuration Debug
 
-      - run: dotnet test --filter "Category=UI"
+      # Install Playwright browsers
+      - name: Install Playwright
+        working-directory: NuvioQAUT/PlaywrightBDD
+        run: pwsh bin/Debug/net9.0/playwright.ps1 install --with-deps
+
+      # Run UI tests
+      - name: Run UI tests
+        working-directory: NuvioQAUT/PlaywrightBDD
+        env:
+          BASE_URL: http://127.0.0.1:8090
+          HEADLESS: true
+        run: dotnet test --filter "Category=UI"
