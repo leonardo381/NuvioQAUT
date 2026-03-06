@@ -63,4 +63,6 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:8090
           HEADLESS: true
+          ADMIN_USER: NuvioAppQAUT@gmail.com
+          ADMIN_PASSWORD: abcd1234
         run: dotnet test --filter "Category=UI"
