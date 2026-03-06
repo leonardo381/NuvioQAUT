@@ -21,7 +21,7 @@ jobs:
       - name: Checkout Nuvio
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/leonardo381/Nuvio
+          repository: leonardo381/Nuvio
           path: Nuvio
 
       # Install Go (needed to run Nuvio)
