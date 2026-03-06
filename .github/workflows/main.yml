@@ -77,9 +77,9 @@ jobs:
           ARTIFACT_DIR: artifacts
         run: dotnet test --filter "Category=UI"
 
-      - name: Debug artifact folders
+      - name: Debug artifact files
         if: always()
-        working-directory: NuvioQAUT/NuvioQAUT/PlaywrightBDD
+        working-directory: NuvioQAUT/PlaywrightBDD
         run: |
           pwd
           find artifacts -maxdepth 4 -type f | sort || true
