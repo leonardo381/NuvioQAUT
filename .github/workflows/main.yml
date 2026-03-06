@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout your QA repo
+      # Checkout QA repo
       - name: Checkout QA repo
         uses: actions/checkout@v4
         with:

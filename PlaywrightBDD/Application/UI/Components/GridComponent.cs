@@ -166,19 +166,22 @@ namespace Application.UI.Components
             {
                 var row = BodyRows.Nth(r);
 
+                // Skip PocketBase empty-state row
                 var emptyStateMarker = row.Locator("h6:has-text(\"No records found\")");
                 if (await emptyStateMarker.CountAsync() > 0)
                     continue;
 
-                var actual = await GetCellTextAsync(row, colIndex);
-                var actualNorm = Normalize(actual);
+                // NEW: skip rows that don't have the expected cell
+                var cell = row.Locator($"td:nth-child({colIndex + 1})");
+                if (await cell.CountAsync() == 0)
+                    continue;
 
-                // 1) Exact match ignoring case
-                if (string.Equals(actualNorm, expectedNorm, StringComparison.OrdinalIgnoreCase))
+                var actual = Normalize(await cell.First.InnerTextAsync());
+
+                if (string.Equals(actual, expectedNorm, StringComparison.OrdinalIgnoreCase))
                     return r;
 
-                // 2) Fallback: cell contains the expected value (ignoring case)
-                if (actualNorm.Contains(expectedNorm, StringComparison.OrdinalIgnoreCase))
+                if (actual.Contains(expectedNorm, StringComparison.OrdinalIgnoreCase))
                     return r;
             }
 
