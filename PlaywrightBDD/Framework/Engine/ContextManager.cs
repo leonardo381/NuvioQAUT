@@ -53,16 +53,19 @@ namespace Framework.Engine
                     Directory.CreateDirectory(traceDir);
 
                     var tracePath = Path.Combine(traceDir, $"{testName}.zip");
+                    Console.WriteLine($"[Artifacts] Writing trace: {tracePath}");
 
                     await Context.Tracing.StopAsync(new TracingStopOptions
                     {
                         Path = tracePath
                     });
+
+                    Console.WriteLine("[Artifacts] Trace written successfully");
                 }
             }
-            catch (PlaywrightException)
+            catch (PlaywrightException ex)
             {
-
+                Console.WriteLine($"[Artifacts] Trace failed: {ex}");
             }
 
             await Context.CloseAsync();

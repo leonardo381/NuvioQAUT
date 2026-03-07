@@ -3,7 +3,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
+using NUnit.Framework.Interfaces;
+using Microsoft.Playwright;
 namespace Framework.Engine
 {
     public abstract class TestLifecycleManager
@@ -16,7 +17,10 @@ namespace Framework.Engine
         static TestLifecycleManager()
         {
             GlobalSettings = EnvironmentManager.Load();
+            GlobalSettings.ArtifactDir = Path.GetFullPath(GlobalSettings.ArtifactDir);
             Directory.CreateDirectory(GlobalSettings.ArtifactDir);
+
+            Console.WriteLine($"[Artifacts] Global artifact dir: {GlobalSettings.ArtifactDir}");
         }
 
         protected ExecutionSettings Settings => GlobalSettings;
@@ -60,15 +64,8 @@ namespace Framework.Engine
             if (!_needsUi)
                 return;
 
-            // Screenshot first, while page is still alive
             await CaptureScreenshotOnFailureAsync();
 
-            // hen dispose context, this writes traces too
-            if (Ctx is not null)
-            {
-                await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
-            }
-            // Per-test cleanup only: context + page
             if (Ctx is not null)
             {
                 await Ctx.DisposeAsync(TestContext.CurrentContext.Test.Name);
@@ -134,33 +131,54 @@ namespace Framework.Engine
         // ----------------------------
         private async Task CaptureScreenshotOnFailureAsync()
         {
+            Console.WriteLine("[Artifacts] Screenshot check started");
+
             var cats = TestContext.CurrentContext.Test.Properties["Category"]
                 .Cast<string>()
                 .Select(c => c.ToLowerInvariant())
                 .ToList();
 
+            Console.WriteLine($"[Artifacts] Categories: {string.Join(", ", cats)}");
+            Console.WriteLine($"[Artifacts] ScreenshotOnFailure: {Settings.ScreenshotOnFailure}");
+            Console.WriteLine($"[Artifacts] Test status: {TestContext.CurrentContext.Result.Outcome.Status}");
+
             if (!cats.Contains("ui"))
+            {
+                Console.WriteLine("[Artifacts] Screenshot skipped: not UI");
                 return;
+            }
 
             if (!Settings.ScreenshotOnFailure)
+            {
+                Console.WriteLine("[Artifacts] Screenshot skipped: ScreenshotOnFailure=false");
                 return;
+            }
 
-            if (TestContext.CurrentContext.Result.Outcome.Status != NUnit.Framework.Interfaces.TestStatus.Failed)
+            if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed)
+            {
+                Console.WriteLine("[Artifacts] Screenshot skipped: test not failed");
                 return;
+            }
 
             if (Ctx?.Page is null)
+            {
+                Console.WriteLine("[Artifacts] Screenshot skipped: page is null");
                 return;
+            }
 
             var dir = Path.Combine(Settings.ArtifactDir, "screenshots");
             Directory.CreateDirectory(dir);
 
             var path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
+            Console.WriteLine($"[Artifacts] Writing screenshot: {path}");
 
-            await Ctx.Page.ScreenshotAsync(new Microsoft.Playwright.PageScreenshotOptions
+            await Ctx.Page.ScreenshotAsync(new PageScreenshotOptions
             {
                 Path = path,
                 FullPage = true
             });
+
+            Console.WriteLine("[Artifacts] Screenshot written successfully");
         }
     }
 }
