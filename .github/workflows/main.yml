@@ -74,9 +74,10 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           TRACING: true
           SCREENSHOT_ON_FAILURE: true
-          ARTIFACT_DIR: artifacts
+          ARTIFACT_DIR: /home/runner/work/NuvioQAUT/NuvioQAUT/NuvioQAUT/PlaywrightBDD/artifacts
         run: dotnet test --filter "Category=UI"
 
+      # Artifacts debug
       - name: Debug artifact files
         if: always()
         working-directory: NuvioQAUT/PlaywrightBDD
@@ -84,6 +85,7 @@ jobs:
           pwd
           find artifacts -maxdepth 5 -type f | sort || true
 
+      # Artifacts upload
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4

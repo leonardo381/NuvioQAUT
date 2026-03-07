@@ -132,17 +132,11 @@ namespace Framework.Engine
         private async Task CaptureScreenshotOnFailureAsync()
         {
             Console.WriteLine("[Artifacts] Screenshot check started");
-
-            var cats = TestContext.CurrentContext.Test.Properties["Category"]
-                .Cast<string>()
-                .Select(c => c.ToLowerInvariant())
-                .ToList();
-
-            Console.WriteLine($"[Artifacts] Categories: {string.Join(", ", cats)}");
+            Console.WriteLine($"[Artifacts] _needsUi: {_needsUi}");
             Console.WriteLine($"[Artifacts] ScreenshotOnFailure: {Settings.ScreenshotOnFailure}");
             Console.WriteLine($"[Artifacts] Test status: {TestContext.CurrentContext.Result.Outcome.Status}");
 
-            if (!cats.Contains("ui"))
+            if (!_needsUi)
             {
                 Console.WriteLine("[Artifacts] Screenshot skipped: not UI");
                 return;
@@ -154,7 +148,7 @@ namespace Framework.Engine
                 return;
             }
 
-            if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed)
+            if (TestContext.CurrentContext.Result.Outcome.Status != NUnit.Framework.Interfaces.TestStatus.Failed)
             {
                 Console.WriteLine("[Artifacts] Screenshot skipped: test not failed");
                 return;
@@ -172,13 +166,20 @@ namespace Framework.Engine
             var path = Path.Combine(dir, $"{TestContext.CurrentContext.Test.Name}.png");
             Console.WriteLine($"[Artifacts] Writing screenshot: {path}");
 
-            await Ctx.Page.ScreenshotAsync(new PageScreenshotOptions
+            try
             {
-                Path = path,
-                FullPage = true
-            });
+                await Ctx.Page.ScreenshotAsync(new Microsoft.Playwright.PageScreenshotOptions
+                {
+                    Path = path,
+                    FullPage = true
+                });
 
-            Console.WriteLine("[Artifacts] Screenshot written successfully");
+                Console.WriteLine("[Artifacts] Screenshot written successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Artifacts] Screenshot failed: {ex}");
+            }
         }
     }
 }
