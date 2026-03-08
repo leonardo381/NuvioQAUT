@@ -5,69 +5,66 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   ui-tests:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout QA repo
       - name: Checkout QA repo
         uses: actions/checkout@v4
         with:
           path: NuvioQAUT
 
-      - name: Checkout Nuvio repo
+      # Checkout Nuvio repo
+      - name: Checkout Nuvio
         uses: actions/checkout@v4
         with:
           repository: leonardo381/Nuvio
           path: Nuvio
 
+      # Install Go (needed to run Nuvio)
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      # Start Nuvio
+      - name: Start Nuvio
+        working-directory: Nuvio
+        run: |
+          nohup go run ./examples/base serve > nuvio.log 2>&1 &
+          sleep 10
+
+      # Setup .NET for Playwright tests
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
 
-      - name: Start Nuvio with Docker Compose
-        working-directory: Nuvio
-        run: |
-          docker compose up -d --build
-
-      - name: Wait for Nuvio to be ready
-        shell: bash
-        run: |
-          for i in {1..45}; do
-            if curl -fsS http://127.0.0.1:8090/_/ > /dev/null; then
-              echo "Nuvio is up"
-              exit 0
-            fi
-            echo "Waiting for Nuvio..."
-            sleep 2
-          done
-
-          echo "Nuvio did not become ready in time"
-          docker ps -a
-          cd Nuvio && docker compose logs || true
-          exit 1
-
+      # Build test project
       - name: Restore tests
         working-directory: NuvioQAUT/PlaywrightBDD
         run: dotnet restore
 
       - name: Build tests
         working-directory: NuvioQAUT/PlaywrightBDD
-        run: dotnet build --configuration Debug --no-restore
+        run: dotnet build --configuration Debug
 
-      - name: Install Playwright browsers
+      # Install Playwright browsers
+      - name: Install Playwright
         working-directory: NuvioQAUT/PlaywrightBDD
         run: pwsh bin/Debug/net9.0/playwright.ps1 install --with-deps
 
+      # Prepare artifact folders
       - name: Prepare artifact folders
         working-directory: NuvioQAUT/PlaywrightBDD
         run: |
           mkdir -p artifacts/traces
           mkdir -p artifacts/screenshots
 
+      # Run UI tests
       - name: Run UI tests
         working-directory: NuvioQAUT/PlaywrightBDD
         env:
@@ -77,15 +74,10 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           TRACING: true
           SCREENSHOT_ON_FAILURE: true
-          ARTIFACT_DIR: artifacts
-        run: dotnet test --filter "Category=UI" --no-build
+          ARTIFACT_DIR: /home/runner/work/NuvioQAUT/NuvioQAUT/NuvioQAUT/PlaywrightBDD/artifacts
+        run: dotnet test --filter "Category=UI"
 
-      - name: Export Nuvio logs
-        if: always()
-        working-directory: Nuvio
-        run: |
-          docker compose logs > nuvio.log 2>&1 || true
-
+      # Artifacts debug
       - name: Debug artifact files
         if: always()
         working-directory: NuvioQAUT/PlaywrightBDD
@@ -93,17 +85,10 @@ jobs:
           pwd
           find artifacts -maxdepth 5 -type f | sort || true
 
+      # Artifacts upload
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts
-          path: |
-            NuvioQAUT/PlaywrightBDD/artifacts/**
-            Nuvio/nuvio.log
-
-      - name: Stop Nuvio containers
-        if: always()
-        working-directory: Nuvio
-        run: |
-          docker compose down -v
+          path: NuvioQAUT/PlaywrightBDD/artifacts/**
