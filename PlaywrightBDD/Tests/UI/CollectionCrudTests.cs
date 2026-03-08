@@ -24,13 +24,12 @@ namespace Application.Tests.UI.Collections
         [SetUp]
         public async Task SetUpAsync()
         {
-            var login = new LoginFlow(Page, Executor);
+            var login = new LoginFlow(Page, Executor, Settings);
             await login.AsAdminAsync();
 
-            var shell = new AppShell(Page, Executor);
-            var collectionPage = new CollectionPage(Page, Executor);
+            var collectionPage = new CollectionPage(Page, Executor, Settings);
 
-            _collectionContext = new CollectionContext(shell, collectionPage);
+            _collectionContext = new CollectionContext(collectionPage.AppShell, collectionPage);
         }
 
         // --------------------------------------------------------

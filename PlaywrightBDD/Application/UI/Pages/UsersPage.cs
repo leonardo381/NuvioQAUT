@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Application.UI.Components;
 using Framework.Core;
+using Framework.Engine;
 using Microsoft.Playwright;
 
 namespace Application.UI.Pages
@@ -12,15 +13,15 @@ namespace Application.UI.Pages
         public ModalComponent Modal { get; }
 
         // optional shell injection
-        public UsersPage(IPage page, ElementExecutor executor, AppShell? shell = null)
-            : base(page, executor)
+        public UsersPage(IPage page, ElementExecutor executor, ExecutionSettings settings, AppShell? shell = null)
+            : base(page, executor, settings)
         {
             Shell = shell ?? new AppShell(page, executor);
 
             // Grid root: tolerant selectors for PocketBase list view
             var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
 
-            // ✅ Modal root: your overlay record panel
+            // Modal root
             var modalRoot = page.Locator(".overlay-panel.record-panel").First;
 
             UsersGrid = new GridComponent(gridRoot, executor);

@@ -1,13 +1,12 @@
 using Application.UI.Components;
 using Framework.Core;
+using Framework.Engine;
 using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
-    public sealed class CollectionPage
+    public sealed class CollectionPage : BasePage
     {
-        public IPage Page { get; }
-
         public AppShell AppShell { get; }
 
         // Optional convenience forwarding
@@ -17,14 +16,18 @@ namespace Application.UI.Pages
         public GridComponent Grid { get; }
         public ModalComponent Modal { get; }
 
-        public CollectionPage(IPage page, ElementExecutor executor)
+        public CollectionPage(
+            IPage page,
+            ElementExecutor executor,
+            ExecutionSettings settings)
+            : base(page, executor, settings)
         {
-            Page = page;
-            AppShell = new AppShell(page, executor);       
-             var gridRoot = page.Locator(".table-wrapper");
+            AppShell = new AppShell(page, executor);
+
+            var gridRoot = page.Locator(".table-wrapper");
             var modalRoot = page.Locator(".overlay-panel.record-panel");
 
-            Grid  = new GridComponent(gridRoot, executor);
+            Grid = new GridComponent(gridRoot, executor);
             Modal = new ModalComponent(modalRoot, executor);
         }
     }

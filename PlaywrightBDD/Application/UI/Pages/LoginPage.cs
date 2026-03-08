@@ -1,5 +1,6 @@
 using Framework.Core;
 using Microsoft.Playwright;
+using Framework.Engine;
 using System.Threading.Tasks;
 
 namespace Application.UI.Pages
@@ -16,8 +17,8 @@ namespace Application.UI.Pages
             Page.GetByRole(AriaRole.Button, new() { Name = "Sign in" })
                 .Or(Page.GetByRole(AriaRole.Button, new() { Name = "Login" }));
 
-        public LoginPage(IPage page, ElementExecutor executor)
-            : base(page, executor)
+    public LoginPage(IPage page, ElementExecutor executor, ExecutionSettings settings)
+        : base(page, executor, settings)
         {
         }
 

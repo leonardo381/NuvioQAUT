@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Application.UI.Pages;
 using Framework.Core;
+using Framework.Engine;
 using Microsoft.Playwright;
 
 namespace Application.UI.Flows
@@ -10,9 +11,9 @@ namespace Application.UI.Flows
     {
         private readonly LoginPage _login;
 
-        public LoginFlow(IPage page, ElementExecutor exec)
+        public LoginFlow(IPage page, ElementExecutor exec, ExecutionSettings settings)
         {
-            _login = new LoginPage(page, exec);
+            _login = new LoginPage(page, exec, settings);
         }
 
         private static (string User, string Password) ResolveAdminCredentials()
