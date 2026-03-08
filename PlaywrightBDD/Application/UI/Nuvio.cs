@@ -1,6 +1,6 @@
 using Application.UI.Components;
-using Application.UI.Pages;
 using Application.UI.Flows;
+using Application.UI.Pages;
 using Framework.Core;
 using Framework.Engine;
 using Microsoft.Playwright;
@@ -25,18 +25,15 @@ namespace Application.UI
             Exec = executor ?? throw new ArgumentNullException(nameof(executor));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            // Shared layout (sidebar / toolbar / toasts)
             Shell = new AppShell(Page, Exec);
         }
 
-        // -------- Pages --------
+        public LoginFlow Login => new LoginFlow(Page, Exec, Settings);
+
+        public CollectionPage Collections => new CollectionPage(Page, Exec, Settings, Shell);
 
         public UsersPage Users => new UsersPage(Page, Exec, Settings, Shell);
-        public CollectionPage Collections => new CollectionPage(Page, Exec, Settings);
 
-        // -------- Flows --------
-
-        public LoginFlow Login => new LoginFlow(Page, Exec, Settings);
-        public UsersFlow UsersFlow => new UsersFlow(Page, Exec, Settings);
+        public UsersFlow UsersFlow => new UsersFlow(Page, Exec, Settings, Shell);
     }
 }

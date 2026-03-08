@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Application.UI.Components;
 using Application.UI.Pages;
 using Framework.Core;
 using Framework.Engine;
@@ -10,9 +11,13 @@ namespace Application.UI.Flows
     {
         private readonly UsersPage _users;
 
-        public UsersFlow(IPage page, ElementExecutor executor, ExecutionSettings settings)
+        public UsersFlow(
+            IPage page,
+            ElementExecutor executor,
+            ExecutionSettings settings,
+            AppShell shell)
         {
-            _users = new UsersPage(page, executor, settings);
+            _users = new UsersPage(page, executor, settings, shell);
         }
 
         public async Task CreateUserAsync(string email, string password)

@@ -6,6 +6,7 @@ using Application.UI.Pages;
 using Application.UI.Components;
 using Application.UI.Flows;
 using Framework.Core;
+using Application.UI;
 using Tests.Helpers;
 using NUnit.Framework;
 
@@ -19,17 +20,17 @@ namespace Application.Tests.UI.Collections
     [Category(TestCategories.Regression)]
     public sealed class UsersCollectionCrudTests : BaseTest
     {
+        private Nuvio _nuvio = default!;
         private CollectionContext _collectionContext = default!;
 
         [SetUp]
         public async Task SetUpAsync()
         {
-            var login = new LoginFlow(Page, Executor, Settings);
-            await login.AsAdminAsync();
+            _nuvio = new Nuvio(Page, Executor, Settings);
 
-            var collectionPage = new CollectionPage(Page, Executor, Settings);
+            await _nuvio.Login.AsAdminAsync();
 
-            _collectionContext = new CollectionContext(collectionPage.AppShell, collectionPage);
+            _collectionContext = new CollectionContext(_nuvio.Shell, _nuvio.Collections);
         }
 
         // --------------------------------------------------------

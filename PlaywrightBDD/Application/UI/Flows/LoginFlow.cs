@@ -7,36 +7,27 @@ using Microsoft.Playwright;
 
 namespace Application.UI.Flows
 {
-    public class LoginFlow
+    public sealed class LoginFlow
     {
-        private readonly LoginPage _login;
+        private readonly LoginPage _loginPage;
+        private readonly ExecutionSettings _settings;
 
-        public LoginFlow(IPage page, ElementExecutor exec, ExecutionSettings settings)
+        public LoginFlow(IPage page, ElementExecutor executor, ExecutionSettings settings)
         {
-            _login = new LoginPage(page, exec, settings);
-        }
-
-        private static (string User, string Password) ResolveAdminCredentials()
-        {
-            var user = Environment.GetEnvironmentVariable("ADMIN_USER");
-            var pass = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
-
-            if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
-            {
-                // Fallback to PocketBase demo credentials
-                user = "test@example.com";
-                pass = "123456";
-            }
-
-            return (user, pass);
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _loginPage = new LoginPage(page, executor, settings);
         }
 
         public async Task AsAdminAsync()
         {
-            var (user, pass) = ResolveAdminCredentials();
+            if (string.IsNullOrWhiteSpace(_settings.AdminUser) ||
+                string.IsNullOrWhiteSpace(_settings.AdminPassword))
+            {
+                throw new InvalidOperationException(
+                    "Admin credentials are missing. Check ADMIN_USER and ADMIN_PASSWORD.");
+            }
 
-            await _login.GotoAsync();
-            await _login.LoginAsync(user, pass);
+            await _loginPage.LoginAsync(_settings.AdminUser, _settings.AdminPassword);
         }
     }
 }

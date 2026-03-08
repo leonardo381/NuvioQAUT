@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Application.UI.Components;
 using Framework.Core;
@@ -6,26 +7,26 @@ using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
-    public class UsersPage : BasePage
+    public sealed class UsersPage : BasePage
     {
         public AppShell Shell { get; }
         public GridComponent UsersGrid { get; }
         public ModalComponent Modal { get; }
 
-        // optional shell injection
-        public UsersPage(IPage page, ElementExecutor executor, ExecutionSettings settings, AppShell? shell = null)
+        public UsersPage(
+            IPage page,
+            ElementExecutor executor,
+            ExecutionSettings settings,
+            AppShell? shell = null)
             : base(page, executor, settings)
         {
             Shell = shell ?? new AppShell(page, executor);
 
-            // Grid root: tolerant selectors for PocketBase list view
             var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
-
-            // Modal root
             var modalRoot = page.Locator(".overlay-panel.record-panel").First;
 
             UsersGrid = new GridComponent(gridRoot, executor);
-            Modal     = new ModalComponent(modalRoot, executor);
+            Modal = new ModalComponent(modalRoot, executor);
         }
 
         public async Task OpenAsync()
@@ -36,14 +37,17 @@ namespace Application.UI.Pages
 
         public async Task CreateUserAsync(string email, string password)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be empty.", nameof(email));
+
+            if (string.IsNullOrWhiteSpace(password))
+                throw new ArgumentException("Password cannot be empty.", nameof(password));
+
             await Shell.Toolbar.ClickCreateAsync();
 
             await Modal.WaitForOpenAsync(10000);
 
-            // label text is literally "email"
             await Modal.FillFieldAsync("email", email);
-
-            // fill both password fields
             await Modal.FillFieldAsync("Password", password);
             await Modal.FillFieldAsync("Password confirm", password);
 

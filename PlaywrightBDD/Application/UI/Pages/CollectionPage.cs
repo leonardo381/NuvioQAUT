@@ -9,7 +9,6 @@ namespace Application.UI.Pages
     {
         public AppShell AppShell { get; }
 
-        // Optional convenience forwarding
         public SidebarMenu Menu => AppShell.Menu;
         public Toolbar Toolbar => AppShell.Toolbar;
 
@@ -19,10 +18,11 @@ namespace Application.UI.Pages
         public CollectionPage(
             IPage page,
             ElementExecutor executor,
-            ExecutionSettings settings)
+            ExecutionSettings settings,
+            AppShell appShell)
             : base(page, executor, settings)
         {
-            AppShell = new AppShell(page, executor);
+            AppShell = appShell ?? throw new ArgumentNullException(nameof(appShell));
 
             var gridRoot = page.Locator(".table-wrapper");
             var modalRoot = page.Locator(".overlay-panel.record-panel");

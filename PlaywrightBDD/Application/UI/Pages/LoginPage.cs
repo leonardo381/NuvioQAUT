@@ -24,7 +24,7 @@ namespace Application.UI.Pages
 
         public async Task GotoAsync()
         {
-            await Page.GotoAsync("http://127.0.0.1:8090/_/#/login");
+            await Page.GotoAsync($"{Settings.BaseUrl}/_/#/login");
         }
 
         public async Task LoginAsync(string email, string password)
