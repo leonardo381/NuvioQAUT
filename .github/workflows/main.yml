@@ -68,6 +68,14 @@ jobs:
           mkdir -p artifacts/traces
           mkdir -p artifacts/screenshots
 
+      - name: Create PocketBase superuser
+        working-directory: Nuvio
+        env:
+          ADMIN_USER: ${{ secrets.ADMIN_USER }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          docker compose exec -T nuvio /app/nuvio superuser upsert "$ADMIN_USER" "$ADMIN_PASSWORD"
+
       - name: Run UI tests
         working-directory: NuvioQAUT/PlaywrightBDD
         env:
