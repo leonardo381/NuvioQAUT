@@ -1,0 +1,237 @@
+Nuvio QA Automation Framework
+
+UI and API automation framework built with Playwright, NUnit and .NET 9 for testing the Nuvio CMS (PocketBase-based backend written in Go).
+
+The project is designed as a scalable automation architecture, supporting:
+
+Parallel test execution
+
+CI/CD integration
+
+Playwright tracing
+
+Automatic screenshot capture
+
+Environment configuration
+
+Dockerized application testing
+
+Generic CRUD testing for PocketBase collections
+
+Architecture
+
+The framework follows a layered architecture designed for maintainability and scalability.
+
+Framework
+ ├ Engine
+ │   ├ BrowserManager
+ │   ├ ContextManager
+ │   ├ PlaywrightEngine
+ │   ├ ExecutionSettings
+ │   └ EnvironmentManager
+ │
+ ├ Core
+ │   ├ TestLifecycleManager
+ │   ├ BaseTest
+ │   ├ Waiter
+ │   ├ RetryHandler
+ │   └ ElementExecutor
+ │
+ ├ Assertions
+ │   └ UiAssert
+ │
+Application
+ ├ UI
+ │   ├ Pages
+ │   ├ Components
+ │   └ Context
+ │
+Tests
+ └ UI
+     └ CollectionCrudTests
+
+Design Goals
+
+Clear separation of concerns
+
+Reusable UI components
+
+Minimal test logic duplication
+
+Environment driven configuration
+
+CI/CD friendly execution
+
+Test Lifecycle
+
+Each test follows this lifecycle:
+
+TestLifecycleManager
+        │
+        ▼
+Shared Browser (BrowserManager)
+        │
+        ▼
+New Browser Context per Test
+        │
+        ▼
+Page + UI Components
+        │
+        ▼
+Assertions
+
+Key properties:
+
+Single browser instance
+
+Isolated contexts per test
+
+Parallel execution ready
+
+Technologies
+Tool	Purpose
+.NET 9	Test runtime
+Playwright	Browser automation
+NUnit	Test framework
+GitHub Actions	CI/CD
+Docker	Environment orchestration
+PocketBase	Backend being tested
+Features
+Parallel UI Testing
+
+Tests can run in parallel using NUnit.
+
+Example:
+
+dotnet test --filter "Category=UI"
+
+Parallelization happens at the test level using isolated browser contexts.
+
+Artifact Capture
+
+When a test fails, the framework automatically generates debugging artifacts.
+
+Screenshots
+artifacts/screenshots/<testname>.png
+
+Captured automatically when:
+
+Test fails
+
+Test category = UI
+
+Playwright Traces
+artifacts/traces/<testname>.zip
+
+These can be opened with:
+
+npx playwright show-trace trace.zip
+Environment Configuration
+
+Configuration is controlled via environment variables.
+
+Variable	Description
+BASE_URL	Application URL
+HEADLESS	Run browser headless
+ADMIN_USER	PocketBase admin login
+ADMIN_PASSWORD	PocketBase admin password
+TRACING	Enable Playwright tracing
+SCREENSHOT_ON_FAILURE	Enable screenshots
+ARTIFACT_DIR	Artifact output folder
+
+Example:
+
+BASE_URL=http://127.0.0.1:8090
+HEADLESS=true
+ADMIN_USER=admin@example.com
+ADMIN_PASSWORD=secret
+Running Tests Locally
+Install dependencies
+dotnet restore
+dotnet build
+
+Install Playwright browsers:
+
+pwsh bin/Debug/net9.0/playwright.ps1 install
+Run UI tests
+dotnet test --filter "Category=UI"
+CI/CD Pipeline
+
+Tests run automatically using GitHub Actions.
+
+Pipeline steps:
+
+Checkout automation repository
+
+Checkout Nuvio application repository
+
+Install Go runtime
+
+Start Nuvio server
+
+Install .NET
+
+Build automation project
+
+Install Playwright browsers
+
+Run UI tests
+
+Upload artifacts
+
+Artifacts stored:
+
+Playwright traces
+
+Failure screenshots
+
+Nuvio server logs
+
+Docker Support
+
+Nuvio can be run inside Docker for consistent environments.
+
+Build and run:
+
+docker compose up --build
+
+This starts the Nuvio server inside a container and exposes it on:
+
+http://localhost:8090
+
+This allows the automation framework to test the application in an isolated environment.
+
+Example Test
+
+Example CRUD test:
+
+[Test]
+[Category("UI")]
+public async Task CreateUser_ShouldAppearInGrid()
+{
+    await CollectionContext.CreateAsync(
+        "users",
+        new UserData
+        {
+            Email = "test@example.com",
+            Password = "Password123!"
+        });
+
+    await CollectionContext.AssertRowMatchesAsync(
+        "users",
+        "email",
+        "test@example.com");
+}
+Future Improvements
+
+Planned improvements:
+
+Full Dockerized test execution
+
+Database seeding
+
+API testing layer
+
+Performance test integration
+
+Test reporting dashboards
