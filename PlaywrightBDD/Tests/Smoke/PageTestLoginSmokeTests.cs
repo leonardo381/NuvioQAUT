@@ -1,5 +1,5 @@
+using Application.UI.PageTest.Pages;
 using Framework.Core;
-using Microsoft.Playwright;
 using NUnit.Framework;
 using System.Threading.Tasks;
 
@@ -12,17 +12,10 @@ namespace Tests.Smoke
         [Test]
         public async Task LoginPage_ShouldExposeLoginForm_WithPageTestLifecycle()
         {
-            await GotoLoginAsync();
+            var loginPage = new PageTestLoginPage(Page);
 
-            var identityInput = Page.Locator("input[name='identity'], input[name='email'], input[type='email']").First;
-            var passwordInput = Page.Locator("input[name='password'], input[type='password']").First;
-            var submitButton = Page.GetByRole(AriaRole.Button, new() { Name = "Sign in" })
-                .Or(Page.GetByRole(AriaRole.Button, new() { Name = "Login" }))
-                .First;
-
-            await Expect(identityInput).ToBeVisibleAsync();
-            await Expect(passwordInput).ToBeVisibleAsync();
-            await Expect(submitButton).ToBeVisibleAsync();
+            await loginPage.GotoAsync(Settings.BaseUrl);
+            await loginPage.AssertLoadedAsync();
         }
     }
 }
