@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Application.UI.Components.Base;
-using Framework.Core;
 using Microsoft.Playwright;
 
 namespace Application.UI.Components
@@ -9,11 +7,13 @@ namespace Application.UI.Components
     /// Represents a generic modal dialog.
     /// Pure UI mapping + very small helpers.
     /// </summary>
-    public class ModalComponent : UIComponent
+    public class ModalComponent
     {
-        public ModalComponent(ILocator root, ElementExecutor executor)
-            : base(root, executor)
+        private readonly ILocator _root;
+
+        public ModalComponent(ILocator root)
         {
+            _root = root;
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace Application.UI.Components
         /// </summary>
         public async Task WaitForOpenAsync(int timeoutMs = 5000)
         {
-            await Root.WaitForAsync(new LocatorWaitForOptions
+            await _root.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Visible,
                 Timeout = timeoutMs
@@ -41,7 +41,7 @@ namespace Application.UI.Components
         /// </summary>
         public async Task WaitClosedAsync(int timeoutMs = 5000)
         {
-            await Root.WaitForAsync(new LocatorWaitForOptions
+            await _root.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Detached,
                 Timeout = timeoutMs
@@ -54,7 +54,7 @@ namespace Application.UI.Components
         /// </summary>
         public ILocator GetFieldInput(string label)
         {
-            return Root.GetByLabel(label, new LocatorGetByLabelOptions
+            return _root.GetByLabel(label, new LocatorGetByLabelOptions
             {
                 Exact = true
             });
@@ -68,7 +68,10 @@ namespace Application.UI.Components
         public async Task FillFieldAsync(string label, string value, int timeoutMs = 5000)
         {
             var input = GetFieldInput(label);
-            await Exec.FillAsync(input, value, timeoutMs);
+            await input.FillAsync(value, new LocatorFillOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
         /// <summary>
@@ -79,21 +82,21 @@ namespace Application.UI.Components
         {
             ILocator? button = null;
 
-            var createBtn = Root.GetByRole(AriaRole.Button, new() { Name = "Create" });
+            var createBtn = _root.GetByRole(AriaRole.Button, new() { Name = "Create" });
             if (await createBtn.CountAsync() > 0)
             {
                 button = createBtn;
             }
             else
             {
-                var saveBtn = Root.GetByRole(AriaRole.Button, new() { Name = "Save" });
+                var saveBtn = _root.GetByRole(AriaRole.Button, new() { Name = "Save" });
                 if (await saveBtn.CountAsync() > 0)
                 {
                     button = saveBtn;
                 }
                 else
                 {
-                    var updateBtn = Root.GetByRole(AriaRole.Button, new() { Name = "Update" });
+                    var updateBtn = _root.GetByRole(AriaRole.Button, new() { Name = "Update" });
                     if (await updateBtn.CountAsync() > 0)
                     {
                         button = updateBtn;
@@ -108,38 +111,44 @@ namespace Application.UI.Components
                     "Tried buttons with names: 'Create', 'Save', 'Update'.");
             }
 
-            await Exec.ClickAsync(button, timeoutMs);
+            await button.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
 
         public async Task ClickCloneAsync(int timeoutMs = 5000)
         {
-            var cloneBtn = Root.GetByRole(AriaRole.Button, new() { Name = "Clone", Exact = false });
+            var cloneBtn = _root.GetByRole(AriaRole.Button, new() { Name = "Clone", Exact = false });
 
             if (await cloneBtn.CountAsync() == 0)
                 throw new PlaywrightException("Clone button not found in record panel.");
 
-            await Exec.ClickAsync(cloneBtn, timeoutMs);
+            await cloneBtn.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
                 // --------- record options menu (… button) ---------
 
         private ILocator MoreOptionsButton =>
-            Root.GetByRole(AriaRole.Button, new()
+            _root.GetByRole(AriaRole.Button, new()
             {
                 Name = "More record options",
                 Exact = false
             });
 
         private ILocator DeleteMenuItem =>
-            Root.GetByRole(AriaRole.Menuitem, new()
+            _root.GetByRole(AriaRole.Menuitem, new()
             {
                 Name = "Delete",
                 Exact = false
             });
 
         private ILocator DuplicateMenuItem =>
-            Root.GetByRole(AriaRole.Menuitem, new()
+            _root.GetByRole(AriaRole.Menuitem, new()
             {
                 Name = "Duplicate",
                 Exact = false
@@ -147,26 +156,35 @@ namespace Application.UI.Components
 
         public async Task OpenMoreOptionsAsync(int timeoutMs = 5000)
         {
-            await Exec.ClickAsync(MoreOptionsButton, timeoutMs);
+            await MoreOptionsButton.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
         public async Task ClickDeleteFromMenuAsync(int timeoutMs = 5000)
         {
             await OpenMoreOptionsAsync(timeoutMs);
-            await Exec.ClickAsync(DeleteMenuItem, timeoutMs);
+            await DeleteMenuItem.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
         public async Task ClickDuplicateFromMenuAsync(int timeoutMs = 5000)
         {
             await OpenMoreOptionsAsync(timeoutMs);
-            await Exec.ClickAsync(DuplicateMenuItem, timeoutMs);
+            await DuplicateMenuItem.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
         // ---------- global confirm popup ("Do you really want to delete…?") ----------
 
         // Uses the page behind the modal root to find the confirm overlay
         private ILocator ConfirmPopup =>
-            Root.Page.Locator(".overlay-panel.confirm-popup");
+            _root.Page.Locator(".overlay-panel.confirm-popup");
 
         private ILocator ConfirmYesButton =>
             ConfirmPopup.GetByRole(AriaRole.Button, new()
@@ -183,7 +201,10 @@ namespace Application.UI.Components
                 Timeout = timeoutMs
             });
 
-            await Exec.ClickAsync(ConfirmYesButton, timeoutMs);
+            await ConfirmYesButton.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
 
             await ConfirmPopup.WaitForAsync(new LocatorWaitForOptions
             {

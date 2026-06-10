@@ -28,7 +28,7 @@ namespace Application.UI.Pages
             var modalRoot = page.Locator(".overlay-panel.record-panel");
 
             Grid = new GridComponent(gridRoot, executor);
-            Modal = new ModalComponent(modalRoot, executor);
+            Modal = new ModalComponent(modalRoot);
         }
     }
 }
