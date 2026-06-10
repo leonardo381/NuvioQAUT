@@ -1,5 +1,3 @@
-using Application.UI.Components.Base;
-using Framework.Core;
 using Microsoft.Playwright;
 using System;
 using System.Collections.Generic;
@@ -12,13 +10,18 @@ namespace Application.UI.Components
     /// Represents a generic table/grid component.
     /// Pure UI mapping + small helpers to support generic CRUD flows.
     /// </summary>
-    public class GridComponent : UIComponent
+    public class GridComponent
     {
-        private ILocator HeaderCells => Root.Locator("thead tr th");
-        private ILocator BodyRows => Root.Locator("tbody tr");
-        private ILocator LoadingSpinner => Root.Locator(".loading, .spinner, [data-loading='true']");
+        private readonly ILocator _root;
 
-        public GridComponent(ILocator root, ElementExecutor executor) : base(root, executor) { }
+        private ILocator HeaderCells => _root.Locator("thead tr th");
+        private ILocator BodyRows => _root.Locator("tbody tr");
+        private ILocator LoadingSpinner => _root.Locator(".loading, .spinner, [data-loading='true']");
+
+        public GridComponent(ILocator root)
+        {
+            _root = root;
+        }
 
         /// <summary>
         /// Waits for the grid to be considered loaded:
@@ -41,7 +44,7 @@ namespace Application.UI.Components
                 // ignore if spinner isn't part of the DOM
             }
 
-            await Root.WaitForAsync(new LocatorWaitForOptions
+            await _root.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Visible
             });
@@ -216,7 +219,7 @@ namespace Application.UI.Components
                 throw new ArgumentOutOfRangeException(nameof(rowIndex), $"Row index {rowIndex} is out of range. Row count: {rowCount}.");
 
             var row = BodyRows.Nth(rowIndex);
-            await Exec.ClickAsync(row);
+            await row.ClickAsync();
         }
 
         private static string Normalize(string? s)

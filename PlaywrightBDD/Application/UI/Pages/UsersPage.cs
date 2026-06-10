@@ -25,7 +25,7 @@ namespace Application.UI.Pages
             var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
             var modalRoot = page.Locator(".overlay-panel.record-panel").First;
 
-            UsersGrid = new GridComponent(gridRoot, executor);
+            UsersGrid = new GridComponent(gridRoot);
             Modal = new ModalComponent(modalRoot);
         }
 
