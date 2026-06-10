@@ -68,3 +68,10 @@ PlaywrightBDD/
 ```
 
 In the target shape, framework code contains only shared infrastructure that is still useful. Product behavior lives in Nuvio app/page/component abstractions.
+
+## Current Post-P3 Split
+
+- `Health_returns_200` is now a plain NUnit API test and no longer inherits `BaseTest`.
+- It loads settings directly through `EnvironmentManager.Load()` and constructs `PocketBaseApi` with `settings.BaseUrl`.
+- The old `BaseTest` / `TestLifecycleManager` path remains only for legacy UI/CRUD tests for now.
+- The clean `UiTestBase : PageTest` path remains the validated direction for new UI smoke coverage.

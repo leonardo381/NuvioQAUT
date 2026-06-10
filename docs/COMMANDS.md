@@ -229,6 +229,23 @@ $env:ADMIN_PASSWORD = "<admin password>"
 
 Do not document or commit real values.
 
+Latest manual local validation in normal PowerShell:
+
+```text
+Category=Smoke total: 3
+Failed: 0
+Succeeded: 3
+Skipped: 0
+```
+
+Validated Smoke tests:
+
+- `Health_returns_200`
+- `LoginPage_ShouldExposeLoginForm_WithPageTestLifecycle`
+- `LoginPage_ShouldReachAuthenticatedArea_WithPageTestLifecycle`
+
+The agent/sandbox environment may still fail browser launch with `spawn EPERM`; treat that as an environment/browser-launch limitation if the same run passes in normal PowerShell.
+
 ## 8. CRUD Intentional Only
 
 ```powershell

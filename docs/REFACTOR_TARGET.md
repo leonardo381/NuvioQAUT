@@ -6,6 +6,22 @@ Replace custom browser/context/page lifecycle with `Microsoft.Playwright.NUnit` 
 
 The project should use Playwright closer to its strengths: native test lifecycle, auto-waiting locators, web-first assertions, tracing/artifacts where useful, and simple NUnit categories.
 
+## Current Validated State
+
+The clean `PageTest` login vertical slice is runtime-validated locally in normal PowerShell.
+
+Validated non-mutating Smoke path:
+
+- `Health_returns_200`
+- `LoginPage_ShouldExposeLoginForm_WithPageTestLifecycle`
+- `LoginPage_ShouldReachAuthenticatedArea_WithPageTestLifecycle`
+
+Manual `Category=Smoke` result: total 3, failed 0, succeeded 3, skipped 0.
+
+The agent/sandbox environment can still fail browser launch with `spawn EPERM` before navigation or selectors run. That is an environment limitation, not evidence that the PageTest login slice is broken.
+
+P3 also removed the API smoke dependency on the old UI-capable `BaseTest`: `Health_returns_200` now loads settings directly and constructs `PocketBaseApi` without browser/page lifecycle.
+
 ## Keep
 
 - Nuvio-specific abstractions that keep tests clearer.

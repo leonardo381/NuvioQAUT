@@ -311,3 +311,54 @@ Scope:
 - Create one non-mutating login smoke test.
 - Do not wire `ElementExecutor`, `Waiter`, `RetryHandler`, `UiAssert`, or `GenericAssert` into the new path.
 - Do not migrate CRUD tests in the same phase.
+
+## Post-Baseline Validation Notes
+
+P1 added the clean `PageTest` login vertical slice.
+
+P2 added authenticated login support to the same clean path.
+
+Manual local validation was performed in normal PowerShell outside the agent/sandbox:
+
+```powershell
+cd C:\Users\Leo\Documents\PW
+Invoke-WebRequest http://127.0.0.1:8090/_/
+dotnet restore
+dotnet build
+dotnet test --list-tests --no-build
+dotnet test --filter "Category=Smoke" --no-build
+```
+
+`ADMIN_USER` and `ADMIN_PASSWORD` were configured locally. Real values were not documented.
+
+Result:
+
+```text
+Category=Smoke total: 3
+Failed: 0
+Succeeded: 3
+Skipped: 0
+Duration: 2.0s
+```
+
+Validated tests:
+
+- `Health_returns_200`: passed
+- `LoginPage_ShouldExposeLoginForm_WithPageTestLifecycle`: passed
+- `LoginPage_ShouldReachAuthenticatedArea_WithPageTestLifecycle`: passed
+
+The authenticated PageTest login smoke is now runtime-validated locally and remains non-mutating.
+
+Known limitation: the agent/sandbox environment may fail launching Chromium with `spawn EPERM` inside `Microsoft.Playwright.NUnit.BrowserService.CreateBrowser`, before navigation, selectors, or page-object code run. Normal PowerShell validation is the runtime source of truth for this issue.
+
+## Post-P3 API Decoupling Note
+
+P3 removed the API smoke test dependency on the old UI-capable `BaseTest`.
+
+Current API smoke shape:
+
+- `HealthTests` is a plain NUnit test class.
+- `Health_returns_200` keeps `Category("API")` and `Category("Smoke")`.
+- Settings are loaded directly through `EnvironmentManager.Load()`.
+- `PocketBaseApi` is constructed directly with `settings.BaseUrl`.
+- No `BaseTest`, `TestLifecycleManager`, browser, context, page, `ElementExecutor`, `Waiter`, or `RetryHandler` is used by the API test path.

@@ -20,6 +20,8 @@ API tests are non-browser checks.
 
 They should use API-specific helpers or base classes when useful, but should not inherit UI/browser lifecycle just to access settings.
 
+Current state: `Health_returns_200` is a plain NUnit test that loads settings directly and uses `PocketBaseApi`; it does not inherit the old UI-capable `BaseTest`.
+
 Use:
 
 ```powershell
