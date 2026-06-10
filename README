@@ -101,9 +101,11 @@ Parallel UI Testing
 
 Tests can run in parallel using NUnit.
 
-Example:
+Safe default example:
 
-dotnet test --filter "Category=UI"
+dotnet test --filter "Category=Smoke" --no-build
+
+UI/CRUD coverage can mutate data and requires ALLOW_MUTATING_TESTS=true.
 
 Parallelization happens at the test level using isolated browser contexts.
 
@@ -153,8 +155,13 @@ dotnet build
 Install Playwright browsers:
 
 .\PlaywrightBDD\bin\Debug\net9.0\playwright.ps1 install
-Run UI tests
-dotnet test --filter "Category=UI"
+Run safe Smoke tests
+dotnet test --filter "Category=Smoke" --no-build
+
+Run CRUD/Mutating tests only when intentional
+$env:ALLOW_MUTATING_TESTS = "true"
+dotnet test --filter "Category=CRUD" --no-build
+Remove-Item Env:\ALLOW_MUTATING_TESTS -ErrorAction SilentlyContinue
 CI/CD Pipeline
 
 Tests run automatically using GitHub Actions.
@@ -175,7 +182,9 @@ Build automation project
 
 Install Playwright browsers
 
-Run UI tests
+Run Smoke tests by default
+
+Manual workflow_dispatch can run CRUD/Mutating tests with run_mutating=true
 
 Upload artifacts
 

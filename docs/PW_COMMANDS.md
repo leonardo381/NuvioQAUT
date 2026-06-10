@@ -338,7 +338,7 @@ Remove-Item Env:\ALLOW_MUTATING_TESTS -ErrorAction SilentlyContinue
 
 Run mutating tests only against an isolated or disposable environment.
 
-The active CI workflow currently runs `Category=UI`; local PageTest validation should prefer `Category=Smoke`.
+The active CI workflow runs `Category=Smoke` by default. `Category=CRUD` is available only through an intentional manual workflow dispatch path with `ALLOW_MUTATING_TESTS=true`.
 
 ## 14. Playwright Browser Installation
 
@@ -460,10 +460,10 @@ Active CI currently:
 - Restores and builds `PlaywrightBDD`.
 - Installs Playwright browsers with `install --with-deps`.
 - Creates a PocketBase superuser with `docker compose exec -T nuvio /app/nuvio superuser upsert`.
-- Runs `dotnet test --filter "Category=UI" --no-build`.
+- Runs `dotnet test --filter "Category=Smoke" --no-build` by default on push and pull request.
+- Allows intentional manual CRUD/Mutating coverage through `workflow_dispatch` with `run_mutating=true`.
+- Sets `ALLOW_MUTATING_TESTS=true` only for the manual mutating path.
 - Uploads automation artifacts and Nuvio logs.
 - Stops containers with `docker compose down -v`.
-
-The CI workflow file has not been changed for the mutating-test guard. If `Category=UI` includes tests categorized as `Mutating`, they are skipped unless CI sets `ALLOW_MUTATING_TESTS=true`.
 
 Local runs should start Nuvio explicitly, prefer `Category=Smoke` first, and run mutating UI/CRUD filters only when that is intentional.

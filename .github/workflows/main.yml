@@ -1,4 +1,4 @@
-name: UI Tests Against Nuvio
+name: Nuvio Automation Tests
 
 on:
   push:
@@ -6,9 +6,15 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      run_mutating:
+        description: "Run CRUD/Mutating tests against the disposable CI Nuvio instance"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  ui-tests:
+  nuvio-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -68,6 +74,20 @@ jobs:
           mkdir -p artifacts/traces
           mkdir -p artifacts/screenshots
 
+      - name: Select test intent
+        id: test-intent
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.run_mutating }}" == "true" ]]; then
+            echo "filter=Category=CRUD" >> "$GITHUB_OUTPUT"
+            echo "allow_mutating=true" >> "$GITHUB_OUTPUT"
+            echo "label=CRUD/Mutating" >> "$GITHUB_OUTPUT"
+          else
+            echo "filter=Category=Smoke" >> "$GITHUB_OUTPUT"
+            echo "allow_mutating=false" >> "$GITHUB_OUTPUT"
+            echo "label=Smoke" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create PocketBase superuser
         working-directory: Nuvio
         env:
@@ -76,17 +96,21 @@ jobs:
         run: |
           docker compose exec -T nuvio /app/nuvio superuser upsert "$ADMIN_USER" "$ADMIN_PASSWORD"
 
-      - name: Run UI tests
+      - name: Run selected tests
         working-directory: NuvioQAUT/PlaywrightBDD
         env:
           BASE_URL: http://127.0.0.1:8090
           HEADLESS: true
           ADMIN_USER: ${{ secrets.ADMIN_USER }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ALLOW_MUTATING_TESTS: ${{ steps.test-intent.outputs.allow_mutating }}
           TRACING: true
           SCREENSHOT_ON_FAILURE: true
           ARTIFACT_DIR: artifacts
-        run: dotnet test --filter "Category=UI" --no-build
+          TEST_FILTER: ${{ steps.test-intent.outputs.filter }}
+        run: |
+          echo "Running ${{ steps.test-intent.outputs.label }} tests with filter: $TEST_FILTER"
+          dotnet test --filter "$TEST_FILTER" --no-build
 
       - name: Export Nuvio logs
         if: always()

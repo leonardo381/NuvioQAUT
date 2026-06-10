@@ -155,6 +155,7 @@ Status:
 - P1.0 adds `CRUD` and `Mutating` categories to the existing users collection CRUD fixture.
 - Tests categorized as `Mutating` are skipped unless `ALLOW_MUTATING_TESTS=true` is set.
 - Smoke tests remain non-mutating and do not require this opt-in.
+- P1.0b makes CI intent explicit: push and pull request runs use `Category=Smoke`; manual `workflow_dispatch` can run CRUD/Mutating tests with `run_mutating=true`, which sets `ALLOW_MUTATING_TESTS=true`.
 
 Files likely to change:
 

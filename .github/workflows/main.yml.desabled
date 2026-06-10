@@ -1,5 +1,9 @@
 name: UI Tests Against Nuvio
 
+# Stale disabled workflow kept only for reference.
+# The active workflow is .github/workflows/main.yml.
+# This file predates the ALLOW_MUTATING_TESTS guard and should not be used as CI intent.
+
 on:
   push:
     branches: [ main ]

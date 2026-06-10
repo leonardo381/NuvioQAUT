@@ -6,7 +6,7 @@ This project tests a running Nuvio application. The automation repository does n
 
 For a command-focused daily reference, see `docs/PW_COMMANDS.md`.
 
-CI checks out the Nuvio application repository separately, starts it with Docker Compose, waits for it to answer on `http://127.0.0.1:8090/_/`, creates a PocketBase superuser, and then runs UI tests. Local execution must provide an equivalent reachable Nuvio instance before any browser or API runtime validation can pass.
+CI checks out the Nuvio application repository separately, starts it with Docker Compose, waits for it to answer on `http://127.0.0.1:8090/_/`, creates a PocketBase superuser for the disposable CI instance, and runs Smoke tests by default. Local execution must provide an equivalent reachable Nuvio instance before any browser or API runtime validation can pass.
 
 ## Required URL
 
@@ -127,9 +127,9 @@ CI currently:
 - Starts Nuvio with `docker compose up -d --build`.
 - Waits for `http://127.0.0.1:8090/_/`.
 - Creates a PocketBase superuser from repository secrets.
-- Runs `dotnet test --filter "Category=UI" --no-build`.
+- Runs `dotnet test --filter "Category=Smoke" --no-build` by default on push and pull request.
+- Allows intentional manual CRUD/Mutating coverage through `workflow_dispatch` with `run_mutating=true`.
+- Sets `ALLOW_MUTATING_TESTS=true` only for that manual mutating path.
 - Uploads automation artifacts and Nuvio logs.
-
-The workflow file has not been changed for the mutating-test guard. If CI runs tests categorized as `Mutating` without `ALLOW_MUTATING_TESTS=true`, those tests are skipped by the guard.
 
 Local runs must start Nuvio separately before runtime tests. For safe PageTest lifecycle validation, prefer the Smoke filter first.
