@@ -45,7 +45,8 @@ Status:
 
 - P0 lifecycle spike added a clean `PageTest` path without deleting the old custom harness.
 - `PageTestUiBase` + `PageTestLoginPage` + `PageTestLoginSmokeTests` are runtime-validated in a normal local PowerShell session as of 2026-06-10.
-- Manual `Category=Smoke` result: total 2, failed 0, succeeded 2, skipped 0.
+- P1.3 adds a non-mutating authenticated PageTest login smoke that submits admin credentials and asserts the login form is gone after auth.
+- Earlier manual `Category=Smoke` result before the authenticated smoke was added: total 2, failed 0, succeeded 2, skipped 0.
 - The agent/sandbox environment may still fail to launch Chromium with `Microsoft.Playwright.PlaywrightException: spawn EPERM`; that occurs before navigation/selectors and does not currently invalidate the local PageTest smoke result.
 
 Files likely to change:

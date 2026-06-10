@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Application.UI.PageTest.Pages
@@ -41,5 +42,21 @@ namespace Application.UI.PageTest.Pages
 
         public Task SubmitAsync()
             => SubmitButton.ClickAsync();
+
+        public async Task LoginAsync(string baseUrl, string usernameOrEmail, string password)
+        {
+            await GotoAsync(baseUrl);
+            await AssertLoadedAsync();
+            await FillCredentialsAsync(usernameOrEmail, password);
+            await SubmitAsync();
+        }
+
+        public async Task AssertAuthenticatedAsync()
+        {
+            // Current clean-path signal: successful auth leaves the login route and removes the login form.
+            await Assertions.Expect(_page).ToHaveURLAsync(new Regex(".*/_/#/(?!login(?:$|[/?#])).*"));
+            await Assertions.Expect(IdentityInput).ToBeHiddenAsync();
+            await Assertions.Expect(PasswordInput).ToBeHiddenAsync();
+        }
     }
 }

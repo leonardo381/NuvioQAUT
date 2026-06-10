@@ -296,8 +296,11 @@ Current Smoke coverage includes:
 
 - API health check.
 - PageTest login page form visibility check.
+- PageTest authenticated admin login check when `ADMIN_USER` and `ADMIN_PASSWORD` are configured.
 
-The PageTest login smoke navigates to the login page and asserts visible form elements. It does not submit credentials.
+The PageTest login form smoke navigates to the login page and asserts visible form elements. It does not submit credentials.
+
+The authenticated login smoke submits admin credentials, asserts the browser leaves the login route, and asserts the login form is no longer visible. It does not create, update, or delete records. If `ADMIN_USER` or `ADMIN_PASSWORD` is missing, the authenticated smoke is skipped with a clear reason.
 
 Manual local validation status:
 
@@ -310,6 +313,8 @@ Manual local validation status:
 - Summary: total 2, failed 0, succeeded 2, skipped 0.
 
 The PageTest smoke path is runtime-validated locally for `PageTestUiBase` + `PageTestLoginPage` + `PageTestLoginSmokeTests`.
+
+P1.3 adds a third Smoke test for authenticated admin login. That newer test still needs normal local PowerShell validation with valid `ADMIN_USER` and `ADMIN_PASSWORD`.
 
 ## 13. Do Not Run Accidentally
 
@@ -387,6 +392,8 @@ Invoke-WebRequest http://127.0.0.1:8090/_/ -UseBasicParsing -TimeoutSec 5
 
 cd C:\Users\Leo\Documents\PW
 $env:BASE_URL = "http://127.0.0.1:8090"
+$env:ADMIN_USER = "admin@example.com"
+$env:ADMIN_PASSWORD = "secret"
 dotnet restore
 dotnet build
 dotnet test --list-tests --no-build
@@ -459,10 +466,10 @@ Active CI currently:
 - Waits for `http://127.0.0.1:8090/_/`.
 - Restores and builds `PlaywrightBDD`.
 - Installs Playwright browsers with `install --with-deps`.
-- Creates a PocketBase superuser with `docker compose exec -T nuvio /app/nuvio superuser upsert`.
 - Runs `dotnet test --filter "Category=Smoke" --no-build` by default on push and pull request.
 - Allows intentional manual CRUD/Mutating coverage through `workflow_dispatch` with `run_mutating=true`.
 - Sets `ALLOW_MUTATING_TESTS=true` only for the manual mutating path.
+- Creates a PocketBase superuser with `docker compose exec -T nuvio /app/nuvio superuser upsert` only for the manual mutating path.
 - Uploads automation artifacts and Nuvio logs.
 - Stops containers with `docker compose down -v`.
 

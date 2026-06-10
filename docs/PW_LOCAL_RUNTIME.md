@@ -6,7 +6,7 @@ This project tests a running Nuvio application. The automation repository does n
 
 For a command-focused daily reference, see `docs/PW_COMMANDS.md`.
 
-CI checks out the Nuvio application repository separately, starts it with Docker Compose, waits for it to answer on `http://127.0.0.1:8090/_/`, creates a PocketBase superuser for the disposable CI instance, and runs Smoke tests by default. Local execution must provide an equivalent reachable Nuvio instance before any browser or API runtime validation can pass.
+CI checks out the Nuvio application repository separately, starts it with Docker Compose, waits for it to answer on `http://127.0.0.1:8090/_/`, and runs Smoke tests by default. Local execution must provide an equivalent reachable Nuvio instance before any browser or API runtime validation can pass.
 
 ## Required URL
 
@@ -54,8 +54,11 @@ Current Smoke coverage includes:
 
 - API health check.
 - PageTest login page form visibility check.
+- PageTest authenticated admin login check when `ADMIN_USER` and `ADMIN_PASSWORD` are configured.
 
-The login smoke navigates to the login page and asserts form elements. It does not submit credentials.
+The login form smoke navigates to the login page and asserts form elements. It does not submit credentials.
+
+The authenticated login smoke submits admin credentials, asserts the browser leaves the login route, and asserts the login form is no longer visible. It does not create, update, or delete records. If `ADMIN_USER` or `ADMIN_PASSWORD` is missing, the authenticated smoke is skipped with a clear reason.
 
 ## Local Smoke Validation Status
 
@@ -82,6 +85,8 @@ Result:
 - Summary: total 2, failed 0, succeeded 2, skipped 0.
 
 This validates the current `PageTestUiBase` + `PageTestLoginPage` + `PageTestLoginSmokeTests` path in a normal local PowerShell session.
+
+P1.3 adds a third Smoke test for authenticated admin login. That newer test still needs normal local PowerShell validation with valid `ADMIN_USER` and `ADMIN_PASSWORD`.
 
 Agent/sandbox note: the same PageTest smoke may fail inside the agent execution environment with `Microsoft.Playwright.PlaywrightException: spawn EPERM` while launching Chromium. That failure occurs before navigation or selector assertions and appears to be an agent/sandbox browser launch restriction, not a PageTest lifecycle, selector, or Nuvio runtime failure.
 
@@ -126,10 +131,10 @@ CI currently:
 - Checks out `leonardo381/Nuvio` separately.
 - Starts Nuvio with `docker compose up -d --build`.
 - Waits for `http://127.0.0.1:8090/_/`.
-- Creates a PocketBase superuser from repository secrets.
 - Runs `dotnet test --filter "Category=Smoke" --no-build` by default on push and pull request.
 - Allows intentional manual CRUD/Mutating coverage through `workflow_dispatch` with `run_mutating=true`.
 - Sets `ALLOW_MUTATING_TESTS=true` only for that manual mutating path.
+- Creates a PocketBase superuser only for the manual mutating path.
 - Uploads automation artifacts and Nuvio logs.
 
 Local runs must start Nuvio separately before runtime tests. For safe PageTest lifecycle validation, prefer the Smoke filter first.
