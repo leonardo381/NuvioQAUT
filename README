@@ -152,7 +152,7 @@ dotnet build
 
 Install Playwright browsers:
 
-pwsh bin/Debug/net9.0/playwright.ps1 install
+.\PlaywrightBDD\bin\Debug\net9.0\playwright.ps1 install
 Run UI tests
 dotnet test --filter "Category=UI"
 CI/CD Pipeline

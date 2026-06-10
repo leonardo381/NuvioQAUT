@@ -41,6 +41,13 @@ Goal:
 
 - Prove whether `Microsoft.Playwright.NUnit.PageTest` can replace the custom browser/context/page lifecycle while preserving per-test isolation and artifacts.
 
+Status:
+
+- P0 lifecycle spike added a clean `PageTest` path without deleting the old custom harness.
+- `PageTestUiBase` + `PageTestLoginPage` + `PageTestLoginSmokeTests` are runtime-validated in a normal local PowerShell session as of 2026-06-10.
+- Manual `Category=Smoke` result: total 2, failed 0, succeeded 2, skipped 0.
+- The agent/sandbox environment may still fail to launch Chromium with `Microsoft.Playwright.PlaywrightException: spawn EPERM`; that occurs before navigation/selectors and does not currently invalidate the local PageTest smoke result.
+
 Files likely to change:
 
 - `PlaywrightBDD.csproj`
