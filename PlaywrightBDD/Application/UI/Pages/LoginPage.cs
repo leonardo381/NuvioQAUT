@@ -1,39 +1,48 @@
-using Framework.Core;
-using Microsoft.Playwright;
 using Framework.Engine;
+using Microsoft.Playwright;
 using System.Threading.Tasks;
+using static Microsoft.Playwright.Assertions;
 
 namespace Application.UI.Pages
 {
-    public sealed class LoginPage : BasePage
+    public sealed class LoginPage
     {
+        private readonly IPage _page;
+        private readonly ExecutionSettings _settings;
+
         private ILocator IdentityInput =>
-            Page.Locator("input[name='identity'], input[name='email'], input[type='email']");
+            _page.Locator("input[name='identity'], input[name='email'], input[type='email']");
 
         private ILocator PasswordInput =>
-            Page.Locator("input[name='password'], input[type='password']");
+            _page.Locator("input[name='password'], input[type='password']");
 
         private ILocator SubmitButton =>
-            Page.GetByRole(AriaRole.Button, new() { Name = "Sign in" })
-                .Or(Page.GetByRole(AriaRole.Button, new() { Name = "Login" }));
+            _page.GetByRole(AriaRole.Button, new() { Name = "Sign in" })
+                .Or(_page.GetByRole(AriaRole.Button, new() { Name = "Login" }));
 
-    public LoginPage(IPage page, ElementExecutor executor, ExecutionSettings settings)
-        : base(page, executor, settings)
+        public LoginPage(IPage page, ExecutionSettings settings)
         {
+            _page = page;
+            _settings = settings;
         }
 
         public async Task GotoAsync()
         {
-            await Page.GotoAsync($"{Settings.BaseUrl}/_/#/login");
+            await _page.GotoAsync($"{_settings.BaseUrl}/_/#/login");
         }
 
         public async Task LoginAsync(string email, string password)
         {
             await GotoAsync();
 
-            await Exec.FillAsync(IdentityInput, email);
-            await Exec.FillAsync(PasswordInput, password);
-            await Exec.ClickAsync(SubmitButton);
+            await Expect(IdentityInput).ToBeVisibleAsync();
+            await IdentityInput.FillAsync(email);
+
+            await Expect(PasswordInput).ToBeVisibleAsync();
+            await PasswordInput.FillAsync(password);
+
+            await Expect(SubmitButton).ToBeVisibleAsync();
+            await SubmitButton.ClickAsync();
         }
     }
 }

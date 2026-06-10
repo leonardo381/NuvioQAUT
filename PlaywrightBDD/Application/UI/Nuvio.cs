@@ -28,7 +28,7 @@ namespace Application.UI
             Shell = new AppShell(Page, Exec);
         }
 
-        public LoginFlow Login => new LoginFlow(Page, Exec, Settings);
+        public LoginFlow Login => new LoginFlow(Page, Settings);
 
         public CollectionPage Collections => new CollectionPage(Page, Exec, Settings, Shell);
 
