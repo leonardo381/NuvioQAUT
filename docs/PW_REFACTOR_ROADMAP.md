@@ -150,6 +150,12 @@ Goal:
 
 - Prevent accidental mutation of shared Nuvio/PocketBase instances.
 
+Status:
+
+- P1.0 adds `CRUD` and `Mutating` categories to the existing users collection CRUD fixture.
+- Tests categorized as `Mutating` are skipped unless `ALLOW_MUTATING_TESTS=true` is set.
+- Smoke tests remain non-mutating and do not require this opt-in.
+
 Files likely to change:
 
 - `Tests/UI/*`

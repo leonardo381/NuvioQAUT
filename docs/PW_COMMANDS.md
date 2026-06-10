@@ -318,9 +318,25 @@ Potentially mutating automation:
 ```powershell
 dotnet test --filter "Category=UI" --no-build
 dotnet test --filter "Category=CRUD" --no-build
+dotnet test --filter "Category=Mutating" --no-build
 ```
 
-The UI/CRUD tests can create, update, or delete data in a reachable Nuvio/PocketBase instance. Run them only against an isolated or disposable environment.
+The UI/CRUD tests can create, update, or delete data in a reachable Nuvio/PocketBase instance. Current CRUD workflow tests are categorized as `CRUD` and `Mutating`.
+
+The mutating guard skips these tests unless this opt-in is explicitly set:
+
+```powershell
+$env:ALLOW_MUTATING_TESTS = "true"
+dotnet test --filter "Category=CRUD" --no-build
+```
+
+Unset it after the intentional run:
+
+```powershell
+Remove-Item Env:\ALLOW_MUTATING_TESTS -ErrorAction SilentlyContinue
+```
+
+Run mutating tests only against an isolated or disposable environment.
 
 The active CI workflow currently runs `Category=UI`; local PageTest validation should prefer `Category=Smoke`.
 
@@ -447,5 +463,7 @@ Active CI currently:
 - Runs `dotnet test --filter "Category=UI" --no-build`.
 - Uploads automation artifacts and Nuvio logs.
 - Stops containers with `docker compose down -v`.
+
+The CI workflow file has not been changed for the mutating-test guard. If `Category=UI` includes tests categorized as `Mutating`, they are skipped unless CI sets `ALLOW_MUTATING_TESTS=true`.
 
 Local runs should start Nuvio explicitly, prefer `Category=Smoke` first, and run mutating UI/CRUD filters only when that is intentional.

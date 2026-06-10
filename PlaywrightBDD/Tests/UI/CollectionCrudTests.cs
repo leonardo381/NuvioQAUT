@@ -17,6 +17,8 @@ namespace Application.Tests.UI.Collections
     [Parallelizable(ParallelScope.All)]
 
     [Category(TestCategories.UI)]
+    [Category(TestCategories.CRUD)]
+    [Category(TestCategories.Mutating)]
     [Category(TestCategories.Regression)]
     public sealed class UsersCollectionCrudTests : BaseTest
     {

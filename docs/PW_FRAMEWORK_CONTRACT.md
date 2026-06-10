@@ -43,6 +43,7 @@ The custom project layer should own:
 ## Destructive Test Safety
 
 - Destructive or mutating tests must require explicit opt-in.
+- Tests categorized as `Mutating` are skipped unless `ALLOW_MUTATING_TESTS=true` is set.
 - CRUD tests must not be run accidentally against a reachable shared Nuvio/PocketBase instance.
 - Future cleanup/setup strategies should make test data ownership clear.
 

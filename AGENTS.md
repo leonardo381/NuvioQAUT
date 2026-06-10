@@ -39,6 +39,7 @@ The current harness is `BaseTest` + `TestLifecycleManager`. It creates one isola
 
 - Do not run mutating UI or CRUD tests unless the user explicitly allows it.
 - Do not run `dotnet test --filter "Category=UI"` or CRUD filters by accident.
+- Mutating UI/CRUD tests require `ALLOW_MUTATING_TESTS=true`; unset it after intentional runs.
 - Do not delete old harness files during spike phases.
 - Do not replace project-specific Nuvio abstractions with raw Playwright calls everywhere.
 - Do not introduce more wrappers around Playwright without clear justification.
@@ -70,6 +71,7 @@ dotnet test --filter "Category=CRUD"
 ```
 
 Run mutating UI/CRUD tests only when explicitly requested and when the target Nuvio/PocketBase instance is safe to mutate.
+The guard skips tests categorized as `Mutating` unless `ALLOW_MUTATING_TESTS=true` is set.
 
 Normal build commands, when a phase allows build output:
 

@@ -102,7 +102,22 @@ dotnet test --filter "Category=UI"
 dotnet test --filter "Category=CRUD"
 ```
 
-The current UI CRUD tests create, update, and delete data. Use them only against an isolated or disposable Nuvio environment.
+The current UI CRUD tests create, update, and delete data. They are categorized as `CRUD` and `Mutating`.
+
+Mutating tests are skipped unless this opt-in is set:
+
+```powershell
+$env:ALLOW_MUTATING_TESTS = "true"
+dotnet test --filter "Category=CRUD" --no-build
+```
+
+Unset the opt-in after the intentional run:
+
+```powershell
+Remove-Item Env:\ALLOW_MUTATING_TESTS -ErrorAction SilentlyContinue
+```
+
+Use mutating filters only against an isolated or disposable Nuvio environment. Smoke tests do not require this variable.
 
 ## Local And CI Differences
 
@@ -114,5 +129,7 @@ CI currently:
 - Creates a PocketBase superuser from repository secrets.
 - Runs `dotnet test --filter "Category=UI" --no-build`.
 - Uploads automation artifacts and Nuvio logs.
+
+The workflow file has not been changed for the mutating-test guard. If CI runs tests categorized as `Mutating` without `ALLOW_MUTATING_TESTS=true`, those tests are skipped by the guard.
 
 Local runs must start Nuvio separately before runtime tests. For safe PageTest lifecycle validation, prefer the Smoke filter first.

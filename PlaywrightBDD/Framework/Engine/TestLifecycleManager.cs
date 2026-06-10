@@ -43,6 +43,8 @@ namespace Framework.Engine
         [SetUp]
         public async Task Setup()
         {
+            MutatingTestGuard.IgnoreUnlessAllowed();
+
             _needsUi = ShouldUseUiForThisTest();
             if (!_needsUi)
                 return;

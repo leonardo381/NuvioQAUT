@@ -6,5 +6,7 @@ namespace Tests.Helpers
         public const string API = "API";
         public const string Smoke = "Smoke";
         public const string Regression = "Regression";
+        public const string CRUD = "CRUD";
+        public const string Mutating = "Mutating";
     }
 }
