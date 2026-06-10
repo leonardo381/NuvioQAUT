@@ -1,6 +1,5 @@
 using Framework.Engine;
 using Microsoft.Playwright.NUnit;
-using NUnit.Framework;
 
 namespace Framework.Core
 {
@@ -8,17 +7,6 @@ namespace Framework.Core
     {
         protected ExecutionSettings Settings { get; } = EnvironmentManager.Load();
 
-        private ElementExecutor? _executor;
-
-        protected ElementExecutor Executor => _executor ??= new ElementExecutor(
-            waiter: new Waiter(),
-            retry: new RetryHandler()
-        );
-
-        [SetUp]
-        public void ResetPerTestServices()
-        {
-            _executor = null;
-        }
+        protected ElementExecutor Executor { get; } = new();
     }
 }
