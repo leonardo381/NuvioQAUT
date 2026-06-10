@@ -25,7 +25,7 @@ namespace Application.UI
             Exec = executor ?? throw new ArgumentNullException(nameof(executor));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            Shell = new AppShell(Page, Exec);
+            Shell = new AppShell(Page);
         }
 
         public LoginFlow Login => new LoginFlow(Page, Settings);

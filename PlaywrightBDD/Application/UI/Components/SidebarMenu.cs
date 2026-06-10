@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Application.UI.Components.Base;
-using Framework.Core;
 using Microsoft.Playwright;
 
 namespace Application.UI.Components
@@ -9,11 +7,13 @@ namespace Application.UI.Components
     /// Represents the left sidebar menu with collection links.
     /// Pure UI mapping, no business logic.
     /// </summary>
-    public class SidebarMenu : UIComponent
+    public class SidebarMenu
     {
-        public SidebarMenu(ILocator root, ElementExecutor executor)
-            : base(root, executor)
+        private readonly ILocator _root;
+
+        public SidebarMenu(ILocator root)
         {
+            _root = root;
         }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace Application.UI.Components
         /// Example: "users", "posts", "logs", etc.
         /// </summary>
         private ILocator CollectionLink(string collectionName) =>
-            Root.Locator("a.sidebar-list-item")
+            _root.Locator("a.sidebar-list-item")
                 .Filter(new LocatorFilterOptions
                 {
                     // Keep it simple and consistent with other components
@@ -36,7 +36,10 @@ namespace Application.UI.Components
         public async Task OpenCollectionAsync(string collectionName, int timeoutMs = 15000)
         {
             var link = CollectionLink(collectionName);
-            await Exec.ClickAsync(link, timeoutMs);
+            await link.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
 
         /// <summary>
