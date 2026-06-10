@@ -85,6 +85,12 @@ Goal:
 
 - Remove category-driven lifecycle routing by separating UI and API base classes.
 
+Status:
+
+- P1.1 adds `ApiTestBase` for non-browser tests.
+- `Health_returns_200` now inherits `ApiTestBase` instead of the old UI-capable `BaseTest`.
+- Legacy UI/CRUD tests remain on `BaseTest` + `TestLifecycleManager`.
+
 Files likely to change:
 
 - `Framework/Core/BaseTest.cs`

@@ -77,8 +77,11 @@ jobs:
       - name: Select test intent
         id: test-intent
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_MUTATING: ${{ github.event.inputs.run_mutating || 'false' }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.run_mutating }}" == "true" ]]; then
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$RUN_MUTATING" == "true" ]]; then
             echo "filter=Category=CRUD" >> "$GITHUB_OUTPUT"
             echo "allow_mutating=true" >> "$GITHUB_OUTPUT"
             echo "label=CRUD/Mutating" >> "$GITHUB_OUTPUT"
@@ -89,6 +92,7 @@ jobs:
           fi
 
       - name: Create PocketBase superuser
+        if: steps.test-intent.outputs.allow_mutating == 'true'
         working-directory: Nuvio
         env:
           ADMIN_USER: ${{ secrets.ADMIN_USER }}

@@ -10,7 +10,7 @@ The current harness correctly creates one isolated `BrowserContext` and `Page` p
 
 - Per-test browser context and page isolation.
 - Shared browser instance for performance.
-- Category-based API tests currently avoid browser setup.
+- `Health_returns_200` now uses `ApiTestBase` and avoids browser setup without category-driven lifecycle routing.
 - `Nuvio` app entry point provides a clean test-facing API.
 - Page objects and components keep test bodies readable.
 - API client support is useful for health checks and future setup/cleanup.
@@ -20,7 +20,7 @@ The current harness correctly creates one isolated `BrowserContext` and `Page` p
 
 - Custom lifecycle duplicates `Microsoft.Playwright.NUnit` behavior.
 - Shared browser and Playwright objects are not explicitly disposed.
-- API tests inherit a UI-capable base class and rely on category detection.
+- Legacy `BaseTest` still contains category-driven UI/API lifecycle routing for old tests; new API tests should use `ApiTestBase`.
 - Broad action retries can hide real instability.
 - Manual waits wrap Playwright locator actions that already auto-wait.
 - UI CRUD tests mutate a reachable Nuvio/PocketBase instance.
@@ -67,7 +67,7 @@ Useful:
 Questionable:
 
 - Assembly-level and fixture-level parallel settings are mixed.
-- API tests inherit from `BaseTest` even though they do not need page/browser access.
+- Legacy `BaseTest` still contains category detection, but API tests no longer need it when they inherit from `ApiTestBase`.
 - Category detection is doing lifecycle routing that separate base classes would make clearer.
 
 ## Runner/Harness Verdict
@@ -103,7 +103,7 @@ The harness is not fully justified for generic Playwright lifecycle because it d
 
 ### P1: Should Simplify Soon
 
-- Split UI and API base classes.
+- Continue splitting UI and API base classes; `Health_returns_200` is now on `ApiTestBase`, while legacy UI/CRUD remains on `BaseTest`.
 - Reduce or remove broad action retry wrappers.
 - Replace custom UI assertions with Playwright `Expect`.
 - Centralize settings and remove unused environment variables.

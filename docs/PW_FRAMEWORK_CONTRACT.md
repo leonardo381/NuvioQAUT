@@ -50,12 +50,13 @@ The custom project layer should own:
 
 ## UI And API Test Bases
 
-API tests and UI tests should not share a confusing base class long-term.
+API tests and UI tests should not share a confusing base class.
 
-Future direction:
+Current direction:
 
-- `UiTestBase` owns browser/page/UI setup.
-- `ApiTestBase` owns settings and API helpers without browser/page setup.
+- `ApiTestBase` owns settings and simple API helper creation without browser/page setup.
+- `PageTestUiBase` owns the new `PageTest` UI smoke path.
+- Legacy UI/CRUD tests still use the old `BaseTest` + `TestLifecycleManager` path until they are migrated intentionally.
 
 ## What To Preserve During Refactors
 
