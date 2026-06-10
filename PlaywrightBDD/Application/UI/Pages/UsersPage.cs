@@ -1,13 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using Application.UI.Components;
-using Framework.Core;
-using Framework.Engine;
 using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
-    public sealed class UsersPage : BasePage
+    public sealed class UsersPage
     {
         public AppShell Shell { get; }
         public GridComponent UsersGrid { get; }
@@ -15,10 +13,7 @@ namespace Application.UI.Pages
 
         public UsersPage(
             IPage page,
-            ElementExecutor executor,
-            ExecutionSettings settings,
             AppShell? shell = null)
-            : base(page, executor, settings)
         {
             Shell = shell ?? new AppShell(page);
 

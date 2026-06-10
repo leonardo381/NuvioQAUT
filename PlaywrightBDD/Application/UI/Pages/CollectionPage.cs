@@ -1,11 +1,9 @@
 using Application.UI.Components;
-using Framework.Core;
-using Framework.Engine;
 using Microsoft.Playwright;
 
 namespace Application.UI.Pages
 {
-    public sealed class CollectionPage : BasePage
+    public sealed class CollectionPage
     {
         public AppShell AppShell { get; }
 
@@ -17,10 +15,7 @@ namespace Application.UI.Pages
 
         public CollectionPage(
             IPage page,
-            ElementExecutor executor,
-            ExecutionSettings settings,
             AppShell appShell)
-            : base(page, executor, settings)
         {
             AppShell = appShell ?? throw new ArgumentNullException(nameof(appShell));
 
