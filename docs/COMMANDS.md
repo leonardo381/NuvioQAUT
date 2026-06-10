@@ -220,6 +220,14 @@ dotnet test --filter "Category=API" --no-build
 ```
 
 Smoke/API tests require Nuvio to be reachable when they call the app.
+Authenticated Smoke is non-mutating, but it requires placeholder credentials to be configured locally:
+
+```powershell
+$env:ADMIN_USER = "<admin email>"
+$env:ADMIN_PASSWORD = "<admin password>"
+```
+
+Do not document or commit real values.
 
 ## 8. CRUD Intentional Only
 
