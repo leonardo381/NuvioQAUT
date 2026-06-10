@@ -20,7 +20,7 @@ namespace Application.UI.Pages
             AppShell? shell = null)
             : base(page, executor, settings)
         {
-            Shell = shell ?? new AppShell(page, executor);
+            Shell = shell ?? new AppShell(page);
 
             var gridRoot = page.Locator(".table-wrapper, .pb-table, table").First;
             var modalRoot = page.Locator(".overlay-panel.record-panel").First;

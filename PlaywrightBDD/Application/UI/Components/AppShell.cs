@@ -1,4 +1,3 @@
-using Framework.Core;
 using Microsoft.Playwright;
 
 namespace Application.UI.Components
@@ -18,11 +17,6 @@ namespace Application.UI.Components
             Menu = new SidebarMenu(sidebarRoot);
             Toolbar = new Toolbar(toolbarRoot);
             Toasts = new ToastsComponent(toastRoot);
-        }
-
-        public AppShell(IPage page, ElementExecutor executor)
-            : this(page)
-        {
         }
     }
 }
