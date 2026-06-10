@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Application.UI.Components.Base;
-using Framework.Core;
 using Microsoft.Playwright;
 
 namespace Application.UI.Components
@@ -9,26 +7,28 @@ namespace Application.UI.Components
     /// Represents the top toolbar in a collection page.
     /// Pure UI mapping. No business logic.
     /// </summary>
-    public class Toolbar : UIComponent
+    public class Toolbar
     {
-        public Toolbar(ILocator root, ElementExecutor executor)
-            : base(root, executor)
+        private readonly ILocator _root;
+
+        public Toolbar(ILocator root)
         {
+            _root = root;
         }
 
         // ---- Buttons ----
 
         private ILocator CreateButton =>
-            Root.Locator(".page-header").GetByRole(AriaRole.Button, new() { Name = "New record", Exact = false });
+            _root.Locator(".page-header").GetByRole(AriaRole.Button, new() { Name = "New record", Exact = false });
 
         private ILocator EditButton =>
-            Root.GetByRole(AriaRole.Button, new() { Name = "Edit" });
+            _root.GetByRole(AriaRole.Button, new() { Name = "Edit" });
 
         private ILocator DeleteButton =>
-            Root.GetByRole(AriaRole.Button, new() { Name = "Delete" });
+            _root.GetByRole(AriaRole.Button, new() { Name = "Delete" });
 
         private ILocator SearchBarRoot =>
-            Root.Locator("form.searchbar");
+            _root.Locator("form.searchbar");
 
         // In PocketBase this is a CodeMirror contenteditable
         private ILocator SearchEditor =>
@@ -43,20 +43,20 @@ namespace Application.UI.Components
 
         public async Task ClickCreateAsync()
         {
-            await Exec.ClickAsync(CreateButton);
+            await CreateButton.ClickAsync();
         }
 
         public async Task ClickEditAsync()
         {
-            await Exec.ClickAsync(EditButton);
+            await EditButton.ClickAsync();
         }
 
         public async Task ClickDeleteAsync()
         {
-            await Exec.ClickAsync(DeleteButton);
+            await DeleteButton.ClickAsync();
         }
 
-                /// <summary>
+        /// <summary>
         /// Clears any existing search and executes a new search query using the UI search bar.
         /// </summary>
         public async Task SearchAsync(string query, int timeoutMs = 5000)
@@ -64,14 +64,23 @@ namespace Application.UI.Components
             // Clear previous query if the Clear button is present
             if (await ClearButton.CountAsync() > 0)
             {
-                await Exec.ClickAsync(ClearButton, timeoutMs);
+                await ClearButton.ClickAsync(new LocatorClickOptions
+                {
+                    Timeout = timeoutMs
+                });
             }
 
             // Focus editor and set the query
-            await Exec.FillAsync(SearchEditor, query, timeoutMs);
+            await SearchEditor.FillAsync(query, new LocatorFillOptions
+            {
+                Timeout = timeoutMs
+            });
 
             // Click the Search button (this is how PB triggers the filter)
-            await Exec.ClickAsync(SearchButton, timeoutMs);
+            await SearchButton.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = timeoutMs
+            });
         }
     }
 }

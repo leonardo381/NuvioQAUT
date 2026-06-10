@@ -21,7 +21,7 @@ namespace Application.UI.Components
             var toolbarRoot = page.Locator(".page-content");
             var toastRoot = page.Locator(".toasts-wrapper");
             Menu = new SidebarMenu(sidebarRoot);
-            Toolbar = new Toolbar(toolbarRoot, executor);
+            Toolbar = new Toolbar(toolbarRoot);
             Toasts = new ToastsComponent(toastRoot, executor);
         }
     }
