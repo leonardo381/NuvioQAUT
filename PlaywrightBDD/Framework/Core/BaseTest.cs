@@ -1,31 +1,24 @@
-using Framework.Assertions;
 using Framework.Engine;
-using Microsoft.Playwright;
+using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Framework.Core
 {
-    public abstract class BaseTest : TestLifecycleManager
+    public abstract class BaseTest : PageTest
     {
-        protected IPage Page => Ctx!.Page;
+        protected ExecutionSettings Settings { get; } = EnvironmentManager.Load();
+
         private ElementExecutor? _executor;
+
         protected ElementExecutor Executor => _executor ??= new ElementExecutor(
             waiter: new Waiter(),
             retry: new RetryHandler()
         );
 
-        private UiAssert? _ui;
-        protected UiAssert UI => _ui ??= new UiAssert(Page);
-
         [SetUp]
         public void ResetPerTestServices()
         {
             _executor = null;
-            _ui = null;
         }
     }
 }
