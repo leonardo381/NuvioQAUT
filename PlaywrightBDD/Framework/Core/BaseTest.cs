@@ -6,7 +6,5 @@ namespace Framework.Core
     public abstract class BaseTest : PageTest
     {
         protected ExecutionSettings Settings { get; } = EnvironmentManager.Load();
-
-        protected ElementExecutor Executor { get; } = new();
     }
 }

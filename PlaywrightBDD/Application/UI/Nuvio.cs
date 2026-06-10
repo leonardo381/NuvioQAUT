@@ -1,7 +1,6 @@
 using Application.UI.Components;
 using Application.UI.Flows;
 using Application.UI.Pages;
-using Framework.Core;
 using Framework.Engine;
 using Microsoft.Playwright;
 using System;
@@ -18,7 +17,7 @@ namespace Application.UI
         public ExecutionSettings Settings { get; }
         public AppShell Shell { get; }
 
-        public Nuvio(IPage page, ElementExecutor executor, ExecutionSettings settings)
+        public Nuvio(IPage page, ExecutionSettings settings)
         {
             Page = page ?? throw new ArgumentNullException(nameof(page));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));

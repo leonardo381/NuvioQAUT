@@ -26,7 +26,7 @@ namespace Application.Tests.UI.Collections
         [SetUp]
         public async Task SetUpAsync()
         {
-            _nuvio = new Nuvio(Page, Executor, Settings);
+            _nuvio = new Nuvio(Page, Settings);
 
             await _nuvio.Login.AsAdminAsync();
 
