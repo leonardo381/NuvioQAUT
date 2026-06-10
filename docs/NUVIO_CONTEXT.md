@@ -1,8 +1,22 @@
 # Nuvio Context
 
-## Application Under Test
+## What Nuvio Is Here
 
-Nuvio is the application under test. This repository tests Nuvio through UI and API automation and should not change Nuvio application code.
+Nuvio is the application under test for this Playwright automation framework.
+
+The framework workspace is:
+
+```text
+C:\Users\Leo\Documents\PW
+```
+
+The local Nuvio workspace is:
+
+```text
+C:\Users\Leo\Documents\Nuvio\NuvioCMS\Nuvio
+```
+
+## Local URLs
 
 Nuvio uses PocketBase/admin UI locally at:
 
@@ -10,51 +24,51 @@ Nuvio uses PocketBase/admin UI locally at:
 http://127.0.0.1:8090/_/
 ```
 
-The default base URL expected by tests is:
+The base URL expected by tests is:
 
 ```text
 http://127.0.0.1:8090
 ```
 
-The admin login path is expected around:
+The login/admin route is expected around:
 
 ```text
 /_/#/login
 ```
 
-## Local Workspaces
+Nuvio must be running before browser or API smoke tests are executed.
 
-Nuvio application:
+## Local Versus CI
 
-```text
-C:\Users\Leo\Documents\Nuvio\NuvioCMS\Nuvio
-```
+Local runs normally require starting Nuvio separately from this PW repository.
 
-PW automation framework:
-
-```text
-C:\Users\Leo\Documents\PW
-```
-
-## Runtime Requirement
-
-Nuvio must be running before browser or API smoke tests are run. CI may start Nuvio through Docker Compose, but local runs must start it separately.
+CI may start Nuvio through Docker Compose or a workflow-owned disposable instance. Do not assume local and CI startup are identical; inspect the workflow before changing CI behavior.
 
 ## Credentials
 
-Use environment variables:
+Use environment variables for credentials. Do not hardcode credentials and do not document real values.
+
+Framework authenticated tests may use:
 
 ```powershell
 $env:ADMIN_USER = "<admin email>"
 $env:ADMIN_PASSWORD = "<admin password>"
 ```
 
-Rules:
+The Nuvio repo contains `.env.example` entries for local/CI provisioning and tooling:
 
-- Do not hardcode credentials.
-- Do not document real credential values.
-- Do not commit local credential files.
+```powershell
+$env:PB_SUPERUSER_EMAIL = "<admin email>"
+$env:PB_SUPERUSER_PASSWORD = "<admin password>"
+$env:PB_URL = "http://127.0.0.1:8090"
+$env:NUVIO_QA_BASE_URL = "http://127.0.0.1:8090"
+$env:NUVIO_ALLOW_DEV_RESET = "1"
+```
 
-## Useful Abstractions
+Only set `NUVIO_ALLOW_DEV_RESET` when intentionally running Nuvio dev data tooling against a disposable/local environment.
 
-Nuvio-specific app helpers and page objects are useful when they keep tests readable. They should not duplicate Playwright browser/context/page lifecycle.
+## What Belongs In The Framework
+
+Nuvio-specific page objects, components, and app helpers are useful when they make tests easier to read and maintain.
+
+They should not duplicate Playwright lifecycle, locator waiting behavior, assertion behavior, retries, or generic action execution.

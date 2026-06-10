@@ -2,64 +2,71 @@
 
 ## Project Purpose
 
-This repository is a C#/.NET 9 + NUnit + Playwright automation framework for Nuvio. It should stay focused on Nuvio UI/API validation, not become a generic automation framework.
+This repository contains a C#/.NET 9 + NUnit + Microsoft Playwright automation framework for testing the Nuvio application.
 
-## Refactor Direction
+It is a Nuvio-focused UI/API test project. It should not grow into a generic automation framework detached from the product it tests.
+
+## Primary Refactor Direction
 
 - Prefer `Microsoft.Playwright.NUnit` native lifecycle where possible.
-- Prefer Playwright `Locator` APIs and `Expect` assertions over custom wait, retry, and assertion wrappers.
-- Prefer small page objects/components over generic manager or executor layers.
-- Keep Nuvio-specific app helpers when they make tests easier to read.
-- Remove custom infrastructure only after verifying usages and migration impact.
+- Prefer Playwright `Locator` APIs and `Expect` assertions over custom wait/retry/assert wrappers.
+- Prefer small page objects/components over generic manager/executor layers.
+- Keep Nuvio-specific app/page abstractions when they make tests clearer.
+- Remove custom infrastructure after auditing usage and migration impact.
 
-## Working Pattern
+## Refactor Philosophy
 
-- Inspect the current code first.
-- Propose or follow one small phase at a time.
-- Change only what the phase asks for.
-- Do not mix docs, CI, lifecycle, selectors, and test migration in one phase.
-- Do not migrate CRUD tests and clean up wrappers in the same phase.
-- Run the safe validation commands allowed by the phase.
-- Report changed files, commands, tests run/skipped, risks, and the next recommended phase.
+- The goal is not to keep every old basic test green at all costs.
+- The goal is to arrive at a simpler, more idiomatic Playwright/NUnit framework.
+- Temporarily broken basic tests are acceptable during explicit refactor phases if the breakage is understood, reported, and has a recovery plan.
+- Do not keep bad architecture only because old tests currently depend on it.
+
+## Agent Workflow
+
+1. Inspect first.
+2. Understand current dependencies and call paths.
+3. Propose or follow one focused phase.
+4. Change only what the phase asks.
+5. Avoid mixing unrelated work such as docs, CI, lifecycle, selectors, and test migration.
+6. Run safe validation commands allowed by the phase.
+7. Report changed files, commands, tests run/skipped, and risks.
 
 ## Hard Rules
 
-- Do not introduce new guards, wrappers, managers, or framework layers without explicit approval.
-- Do not run data-changing tests unless explicitly requested.
-- Do not run `dotnet test --filter "Category=UI"` or `dotnet test --filter "Category=CRUD"` unless explicitly requested.
-- Do not alter the Nuvio app from this repository.
-- Do not expose real credentials in docs, code, examples, logs, or output.
-- Do not delete or rename files unless the current phase explicitly allows it.
+- Do not introduce new guards, wrappers, managers, engines, or runners without explicit approval.
+- Do not add safety abstractions unless the user explicitly asks for them.
+- Do not migrate CRUD tests and clean up wrappers in the same phase.
+- Do not run data-changing commands unless explicitly requested.
+- Do not alter the Nuvio application from this repository.
+- Do not expose credentials in docs, scripts, tests, logs, or final reports.
+- Do not preserve a poor abstraction only to avoid touching old code.
 
 ## Safe Commands
+
+These are generally safe read-only checks:
 
 ```powershell
 dotnet --version
 dotnet test --list-tests --no-build
 ```
 
-When a phase allows build output:
+Run build/restore only when the phase allows build output:
 
 ```powershell
 dotnet restore
 dotnet build
 ```
 
-Potentially data-changing commands:
+Do not run data-changing UI/CRUD tests unless the user explicitly asks and the target Nuvio/PocketBase instance is safe to mutate.
 
-```powershell
-dotnet test --filter "Category=UI"
-dotnet test --filter "Category=CRUD"
-```
-
-Use data-changing commands only against a Nuvio/PocketBase instance that is intended for that purpose.
-
-## Report Format
+## Expected Report Format
 
 At the end of each phase, report:
 
 - Files changed.
-- Commands run and results.
+- Commands run and result summary.
 - Tests run or skipped.
-- Risks or assumptions.
-- Recommended next phase.
+- What broke, if anything.
+- Why it broke.
+- Risks or uncertainties.
+- Next recommended phase.

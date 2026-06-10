@@ -1,67 +1,63 @@
 # Testing Strategy
 
-## Smoke
+## Categories
 
-Smoke tests are safe, fast default validation. They should not create, update, or delete data.
+### Smoke
 
-Run after Nuvio is reachable:
+Smoke tests are the default validation path.
+
+They should be fast, stable, and avoid fragile app state. They should not create, update, or delete data.
+
+Use:
 
 ```powershell
 dotnet test --filter "Category=Smoke" --no-build
 ```
 
-## API
+### API
 
-API tests are non-browser checks against Nuvio/PocketBase endpoints. They should use API-specific helpers or a future API-specific base, not a UI/browser base.
+API tests are non-browser checks.
 
-Run after Nuvio is reachable:
+They should use API-specific helpers or base classes when useful, but should not inherit UI/browser lifecycle just to access settings.
+
+Use:
 
 ```powershell
 dotnet test --filter "Category=API" --no-build
 ```
 
-## UI
+### UI
 
-UI tests are browser tests. They should move toward Playwright/NUnit `PageTest` lifecycle.
+UI tests are browser tests.
 
-Do not run all UI tests casually:
+They should move toward `Microsoft.Playwright.NUnit.PageTest` lifecycle and direct Playwright `Locator`/`Expect` usage.
 
-```powershell
-dotnet test --filter "Category=UI" --no-build
-```
+### CRUD
 
-Use this only when the target Nuvio environment is intended for that coverage.
+CRUD tests create, read, update, or delete application data.
 
-## CRUD
+CRUD is not bad. It just needs an intentional local/disposable environment because it may alter test data.
 
-CRUD tests create, read, update, and delete data. They are not bad; they just need an intentional environment.
-
-Intended command:
+Use only when that is intended:
 
 ```powershell
 dotnet test --filter "Category=CRUD" --no-build
 ```
 
-Current source should be checked before relying on this filter, because the visible users collection CRUD fixture is currently categorized as `UI` and `Regression`.
+## Safety Direction
 
-Do not run CRUD tests against an important or shared environment.
+Avoid introducing extra categories like `Mutating` or `StateChanging` unless the user explicitly asks.
 
-## Category Guidance
+If protection is needed later, prefer simple NUnit-native or workflow-native mechanisms:
 
-Useful categories:
+- `Category("CRUD")`
+- NUnit `Explicit`
+- a separate manual CI workflow
 
-- `Smoke`
-- `API`
-- `UI`
-- `CRUD`
-- `Regression`
+Prefer those over new custom guard classes.
 
-Avoid extra categories such as `Mutating` or `StateChanging` unless the user explicitly asks.
+## Refactor Reality
 
-If protection is needed later, prefer simple NUnit-native mechanisms:
+Preserving the current CRUD tests is not the highest priority if they block framework simplification.
 
-- clear `[Category("CRUD")]`
-- `[Explicit]`
-- separate CI/manual workflow
-
-Do not create custom guard classes unless a later phase explicitly requests them.
+They can be rewritten, simplified, or retired later if that helps remove unnecessary lifecycle/wrapper code. Any temporary breakage during a focused phase must be reported clearly.
