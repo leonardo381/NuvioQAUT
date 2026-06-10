@@ -89,7 +89,8 @@ Status:
 
 - P1.1 adds `ApiTestBase` for non-browser tests.
 - `Health_returns_200` now inherits `ApiTestBase` instead of the old UI-capable `BaseTest`.
-- Legacy UI/CRUD tests remain on `BaseTest` + `TestLifecycleManager`.
+- P1.2 adds `LegacyUiTestBase` as the explicit old UI/CRUD base.
+- `UsersCollectionCrudTests` now inherits `LegacyUiTestBase`, which still uses `BaseTest` + `TestLifecycleManager` underneath.
 
 Files likely to change:
 

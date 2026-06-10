@@ -23,7 +23,14 @@ This repository contains a C#/.NET 9 + NUnit + Microsoft Playwright automation f
 - `Application/UI/` owns the Nuvio app entry point, page objects, components, flows, and UI contexts.
 - `Application/API/` owns lightweight API client support for Nuvio/PocketBase.
 
-The current harness is `BaseTest` + `TestLifecycleManager`. It creates one isolated `BrowserContext` and `Page` per UI test, but much of this duplicates `Microsoft.Playwright.NUnit.PageTest` / `ContextTest` behavior.
+The current test base split is:
+
+- `PageTestUiBase` owns the new `Microsoft.Playwright.NUnit.PageTest` UI path.
+- `ApiTestBase` owns API/non-browser tests.
+- `LegacyUiTestBase` identifies old UI/CRUD fixtures that still use the custom harness.
+- `BaseTest` + `TestLifecycleManager` remain as the retained legacy harness implementation behind `LegacyUiTestBase`.
+
+The legacy harness creates one isolated `BrowserContext` and `Page` per UI test, but much of this duplicates `Microsoft.Playwright.NUnit.PageTest` / `ContextTest` behavior.
 
 ## Mandatory Workflow
 

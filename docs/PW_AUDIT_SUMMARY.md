@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The framework is workable and has useful Nuvio-specific structure, but it contains custom lifecycle and helper layers that duplicate native Playwright .NET and NUnit behavior. There is no separate custom runner. The effective harness is `BaseTest` + `TestLifecycleManager`.
+The framework is workable and has useful Nuvio-specific structure, but it contains custom lifecycle and helper layers that duplicate native Playwright .NET and NUnit behavior. There is no separate custom runner. The legacy UI/CRUD harness is now explicitly surfaced as `LegacyUiTestBase`, backed by `BaseTest` + `TestLifecycleManager`.
 
 The current harness correctly creates one isolated `BrowserContext` and `Page` per UI test. That principle should be preserved. However, browser/context/page lifecycle should likely move toward `Microsoft.Playwright.NUnit.PageTest` or `ContextTest` so Playwright/NUnit own generic lifecycle concerns.
 
@@ -20,7 +20,7 @@ The current harness correctly creates one isolated `BrowserContext` and `Page` p
 
 - Custom lifecycle duplicates `Microsoft.Playwright.NUnit` behavior.
 - Shared browser and Playwright objects are not explicitly disposed.
-- Legacy `BaseTest` still contains category-driven UI/API lifecycle routing for old tests; new API tests should use `ApiTestBase`.
+- Legacy `BaseTest` still contains category-driven UI/API lifecycle routing behind `LegacyUiTestBase`; new API tests should use `ApiTestBase`.
 - Broad action retries can hide real instability.
 - Manual waits wrap Playwright locator actions that already auto-wait.
 - UI CRUD tests mutate a reachable Nuvio/PocketBase instance.
@@ -67,12 +67,12 @@ Useful:
 Questionable:
 
 - Assembly-level and fixture-level parallel settings are mixed.
-- Legacy `BaseTest` still contains category detection, but API tests no longer need it when they inherit from `ApiTestBase`.
+- Legacy `BaseTest` still contains category detection behind `LegacyUiTestBase`, but API tests no longer need it when they inherit from `ApiTestBase`.
 - Category detection is doing lifecycle routing that separate base classes would make clearer.
 
 ## Runner/Harness Verdict
 
-There is no separate custom runner. The harness is `BaseTest` + `TestLifecycleManager`.
+There is no separate custom runner. The legacy UI/CRUD harness is `LegacyUiTestBase`, backed by `BaseTest` + `TestLifecycleManager`.
 
 The harness is not fully justified for generic Playwright lifecycle because it duplicates `PageTest` / `ContextTest`. Keep a small Nuvio-specific base layer, but spike a migration to Playwright's NUnit base classes before adding more tests.
 
@@ -103,7 +103,7 @@ The harness is not fully justified for generic Playwright lifecycle because it d
 
 ### P1: Should Simplify Soon
 
-- Continue splitting UI and API base classes; `Health_returns_200` is now on `ApiTestBase`, while legacy UI/CRUD remains on `BaseTest`.
+- Continue splitting UI and API base classes; `Health_returns_200` is now on `ApiTestBase`, while legacy UI/CRUD remains on `LegacyUiTestBase`.
 - Reduce or remove broad action retry wrappers.
 - Replace custom UI assertions with Playwright `Expect`.
 - Centralize settings and remove unused environment variables.

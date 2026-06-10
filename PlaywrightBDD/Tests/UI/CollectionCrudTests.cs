@@ -20,7 +20,7 @@ namespace Application.Tests.UI.Collections
     [Category(TestCategories.CRUD)]
     [Category(TestCategories.Mutating)]
     [Category(TestCategories.Regression)]
-    public sealed class UsersCollectionCrudTests : BaseTest
+    public sealed class UsersCollectionCrudTests : LegacyUiTestBase
     {
         private Nuvio _nuvio = default!;
         private CollectionContext _collectionContext = default!;

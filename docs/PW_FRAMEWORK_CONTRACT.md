@@ -56,7 +56,8 @@ Current direction:
 
 - `ApiTestBase` owns settings and simple API helper creation without browser/page setup.
 - `PageTestUiBase` owns the new `PageTest` UI smoke path.
-- Legacy UI/CRUD tests still use the old `BaseTest` + `TestLifecycleManager` path until they are migrated intentionally.
+- `LegacyUiTestBase` owns the old UI/CRUD path until those fixtures are migrated intentionally.
+- `BaseTest` + `TestLifecycleManager` remain the old harness implementation behind `LegacyUiTestBase`.
 
 ## What To Preserve During Refactors
 
