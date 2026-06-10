@@ -10,11 +10,6 @@ namespace Application.UI.Components
         public ToastsComponent Toasts { get; }
 
         public AppShell(IPage page)
-            : this(page, new ElementExecutor())
-        {
-        }
-
-        public AppShell(IPage page, ElementExecutor executor)
         {
             var sidebarRoot = page.Locator(".collection-sidebar");
             //var toolbarRoot = page.Locator(".page-header");
@@ -22,7 +17,12 @@ namespace Application.UI.Components
             var toastRoot = page.Locator(".toasts-wrapper");
             Menu = new SidebarMenu(sidebarRoot);
             Toolbar = new Toolbar(toolbarRoot);
-            Toasts = new ToastsComponent(toastRoot, executor);
+            Toasts = new ToastsComponent(toastRoot);
+        }
+
+        public AppShell(IPage page, ElementExecutor executor)
+            : this(page)
+        {
         }
     }
 }
